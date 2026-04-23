@@ -1,0 +1,1799 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model backup_service_models {
+  request_id      String    @id @db.VarChar(255)
+  bucket_name     String    @db.VarChar(80)
+  start_timestamp BigInt
+  end_timestamp   BigInt?
+  object_url      String?
+  status          String    @db.VarChar(50)
+  error_msg       String?
+  created_at      DateTime? @db.Timestamptz(6)
+  updated_at      DateTime? @db.Timestamptz(6)
+  vehicle_no      String    @db.VarChar(100)
+  created_by      BigInt?
+
+  @@index([end_timestamp], map: "idx_backup_service_models_end_timestamp")
+  @@index([start_timestamp], map: "idx_backup_service_models_start_timestamp")
+}
+
+model batteries {
+  id                         BigInt    @id @default(autoincrement())
+  organisation_id            BigInt
+  product_id                 BigInt
+  lot_number                 String?
+  status                     String?
+  bms                        String?
+  oem                        String?
+  cell_oem                   String?
+  model_name                 String?
+  battery_voltage            Decimal?  @db.Decimal
+  battery_capacity           Decimal?  @db.Decimal
+  cell_type                  String?
+  cell_brand                 String?
+  cell_manufacturer          String?
+  cell_voltage               Decimal?  @db.Decimal
+  charge_time_peak           Decimal?  @db.Decimal
+  discharge_time_peak        Decimal?  @db.Decimal
+  battery_with_thermal_paste Boolean?  @default(false)
+  active_balancer_in_bms     Boolean?  @default(false)
+  nominal_capacity           Decimal?  @db.Decimal
+  nominal_cycle_count        BigInt?
+  max_range                  Decimal?  @db.Decimal
+  max_distance               Decimal?  @db.Decimal
+  battery_serial_number      String?
+  rated_battery_pack_cycles  BigInt?
+  max_speed                  Decimal?  @db.Decimal
+  created_at                 DateTime? @db.Timestamptz(6)
+  updated_at                 DateTime? @db.Timestamptz(6)
+  upload_status              Boolean?
+  error_message              String?
+}
+
+model centers {
+  center_id                    BigInt                         @id @default(autoincrement())
+  center_name                  String                         @unique(map: "idx_unique_center_name")
+  address                      String?
+  city                         String?
+  state                        String?
+  pincode                      String?
+  manager_id                   BigInt?
+  created_at                   DateTime?                      @db.Timestamptz(6)
+  updated_at                   DateTime?                      @db.Timestamptz(6)
+  geo_location_lat             Decimal                        @db.Decimal(10, 6)
+  geo_location_lng             Decimal                        @db.Decimal(10, 6)
+  center_region                String                         @db.VarChar(50)
+  type2_sheet_id               String
+  invoice_center_address       String
+  invoice_gst_number           String
+  invoice_state_code           String
+  invoice_center_mobile        String
+  org_id                       BigInt?
+  center_code                  String                         @db.VarChar(50)
+  organisations                organisations?                 @relation(fields: [org_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  users                        users?                         @relation(fields: [manager_id], references: [id], map: "fk_centers_manager")
+  collection_request           collection_request[]
+  collection_trans             collection_trans[]
+  collections                  collections[]
+  inv_locations                inv_locations[]
+  loan_applications            loan_applications[]
+  loan_terms                   loan_terms[]
+  rpt_lms_payment_mnly         rpt_lms_payment_mnly[]
+  rpt_lms_payment_mnly_stage   rpt_lms_payment_mnly_stage[]
+  sales                        sales[]
+  xref_collection_scrap_center xref_collection_scrap_center[]
+
+  @@unique([center_code, org_id], map: "uq_centers_center_code_org_id")
+}
+
+model collection_comments {
+  collection_comment_id BigInt        @id @default(autoincrement())
+  org_id                BigInt
+  collection_id         BigInt
+  is_called             Boolean       @default(false)
+  comment               String
+  is_latest             Boolean       @default(true)
+  created_by            BigInt
+  created_at            DateTime      @default(now()) @db.Timestamptz(6)
+  collections           collections   @relation(fields: [collection_id], references: [collection_id], onDelete: NoAction, onUpdate: NoAction)
+  users                 users         @relation(fields: [created_by], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  organisations         organisations @relation(fields: [org_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model collection_request {
+  request_id                                  BigInt                        @id @default(autoincrement())
+  org_id                                      BigInt
+  center_id                                   BigInt
+  collection_id                               BigInt                        @default(0)
+  is_active                                   Boolean                       @default(true)
+  aggr_trans_id                               BigInt                        @default(0)
+  request_type_id                             BigInt
+  request_status                              String                        @default("PENDING") @db.VarChar(50)
+  request_details                             Json
+  review_details                              Json?
+  request_comment                             String?
+  review_comment                              String?
+  created_by                                  BigInt
+  created_at                                  DateTime                      @default(now()) @db.Timestamptz(6)
+  reviewed_by                                 BigInt?
+  reviewed_at                                 DateTime?                     @default(now()) @db.Timestamptz(6)
+  loan_id                                     BigInt                        @default(0)
+  sale_id                                     BigInt?
+  collection_trans                            collection_trans              @relation(fields: [aggr_trans_id], references: [trans_id], onDelete: NoAction, onUpdate: NoAction)
+  centers                                     centers                       @relation(fields: [center_id], references: [center_id], onDelete: NoAction, onUpdate: NoAction)
+  collections                                 collections                   @relation(fields: [collection_id], references: [collection_id], onDelete: NoAction, onUpdate: NoAction)
+  users_collection_request_created_byTousers  users                         @relation("collection_request_created_byTousers", fields: [created_by], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  organisations                               organisations                 @relation(fields: [org_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  collection_request_types                    collection_request_types      @relation(fields: [request_type_id], references: [request_type_id], onDelete: NoAction, onUpdate: NoAction)
+  users_collection_request_reviewed_byTousers users?                        @relation("collection_request_reviewed_byTousers", fields: [reviewed_by], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  xref_collection_request_doc                 xref_collection_request_doc[]
+}
+
+model collection_request_types {
+  request_type_id        BigInt               @id @default(autoincrement())
+  request_name           String               @db.VarChar(50)
+  request_details_schema Json
+  created_by             BigInt?
+  created_at             DateTime             @default(now()) @db.Timestamptz(6)
+  request_type_cd        String               @db.VarChar(50)
+  org_id                 BigInt
+  collection_request     collection_request[]
+  users                  users?               @relation(fields: [created_by], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  organisations          organisations        @relation(fields: [org_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@unique([org_id, request_type_cd], map: "collection_request_types_orgid_requesttypecd_key")
+}
+
+model collection_scrap_types {
+  scrap_type_id                BigInt                         @id @default(autoincrement())
+  org_id                       BigInt
+  name                         String                         @db.VarChar(50)
+  created_by                   BigInt
+  created_at                   DateTime                       @default(now()) @db.Timestamptz(6)
+  scrap_type_cd                String                         @db.VarChar(50)
+  users                        users                          @relation(fields: [created_by], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  organisations                organisations                  @relation(fields: [org_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  collection_trans             collection_trans[]
+  xref_collection_scrap_center xref_collection_scrap_center[]
+
+  @@unique([org_id, scrap_type_cd], map: "collection_scrap_types_orgid_scraptypecd_key")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model collection_trans {
+  trans_id                                  BigInt                      @id @default(autoincrement())
+  is_aggr_trans                             Boolean
+  org_id                                    BigInt
+  center_id                                 BigInt
+  collection_id                             BigInt                      @default(0)
+  is_active                                 Boolean                     @default(true)
+  transaction_cd                            String?                     @unique(map: "uq_collection_trans_transaction_cd")
+  trans_type                                String                      @db.VarChar(50)
+  trans_subtype                             String                      @db.VarChar(50)
+  mode                                      String                      @db.VarChar(50)
+  amount                                    Decimal                     @db.Decimal(10, 2)
+  recorded_by                               BigInt
+  scrap_type_id                             BigInt                      @default(0)
+  recon_status                              String                      @db.VarChar(50)
+  recon_by                                  BigInt?
+  recon_at                                  DateTime?                   @default(now()) @db.Timestamptz(6)
+  recon_comment                             String?
+  is_settled                                Boolean
+  from_user                                 BigInt                      @default(0)
+  from_customer                             BigInt                      @default(0)
+  to_user                                   BigInt                      @default(0)
+  created_by                                BigInt
+  created_at                                DateTime                    @default(now()) @db.Timestamptz(6)
+  trans_comments                            String?
+  parent_trans_id                           BigInt?
+  request_id                                BigInt?
+  collection_request                        collection_request[]
+  centers                                   centers                     @relation(fields: [center_id], references: [center_id], onDelete: NoAction, onUpdate: NoAction)
+  collections                               collections                 @relation(fields: [collection_id], references: [collection_id], onDelete: NoAction, onUpdate: NoAction)
+  users_collection_trans_created_byTousers  users                       @relation("collection_trans_created_byTousers", fields: [created_by], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  customers                                 customers                   @relation(fields: [from_customer], references: [customer_id], onDelete: NoAction, onUpdate: NoAction)
+  users_collection_trans_from_userTousers   users                       @relation("collection_trans_from_userTousers", fields: [from_user], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  organisations                             organisations               @relation(fields: [org_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  users_collection_trans_recon_byTousers    users?                      @relation("collection_trans_recon_byTousers", fields: [recon_by], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  users_collection_trans_recorded_byTousers users                       @relation("collection_trans_recorded_byTousers", fields: [recorded_by], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  collection_scrap_types                    collection_scrap_types      @relation(fields: [scrap_type_id], references: [scrap_type_id], onDelete: NoAction, onUpdate: NoAction)
+  users_collection_trans_to_userTousers     users                       @relation("collection_trans_to_userTousers", fields: [to_user], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  xref_collection_trans_doc                 xref_collection_trans_doc[]
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model collections {
+  collection_id                                   BigInt                @id @default(autoincrement())
+  center_id                                       BigInt
+  org_id                                          BigInt
+  loan_id                                         BigInt                @default(0)
+  sale_id                                         BigInt                @default(0)
+  emi_installment_no                              Int                   @default(0)
+  is_active                                       Boolean               @default(true)
+  invoice_doc_id                                  BigInt?
+  collection_type                                 String                @db.VarChar(20)
+  collection_subtype                              String                @db.VarChar(20)
+  due_amount                                      Decimal               @db.Decimal(10, 2)
+  fine_amount                                     Decimal?              @db.Decimal(10, 2)
+  follow_up_date                                  DateTime?             @db.Timestamptz(6)
+  last_call                                       DateTime?             @db.Timestamptz(6)
+  due_date                                        DateTime              @db.Timestamptz(6)
+  status                                          String                @db.VarChar(50)
+  expire_reason                                   String?
+  info                                            Json?
+  parent_id                                       BigInt?
+  collector_id                                    BigInt?
+  caller_id                                       BigInt?
+  created_by                                      BigInt?
+  created_at                                      DateTime              @default(now()) @db.Timestamptz(6)
+  loan_term_id                                    BigInt                @default(0)
+  receipt_doc_id                                  BigInt?
+  is_last_collection                              Boolean               @default(false)
+  discount_amount                                 Decimal?              @db.Decimal(10, 2)
+  discount_reason                                 String?
+  collection_comments                             collection_comments[]
+  collection_request                              collection_request[]
+  collection_trans                                collection_trans[]
+  users_collections_caller_idTousers              users?                @relation("collections_caller_idTousers", fields: [caller_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  centers                                         centers               @relation(fields: [center_id], references: [center_id], onDelete: NoAction, onUpdate: NoAction)
+  users_collections_collector_idTousers           users?                @relation("collections_collector_idTousers", fields: [collector_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  users_collections_created_byTousers             users?                @relation("collections_created_byTousers", fields: [created_by], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  documents_collections_invoice_doc_idTodocuments documents?            @relation("collections_invoice_doc_idTodocuments", fields: [invoice_doc_id], references: [document_id], onDelete: NoAction, onUpdate: NoAction)
+  loan_applications                               loan_applications     @relation(fields: [loan_id], references: [application_id], onDelete: NoAction, onUpdate: NoAction)
+  loan_terms                                      loan_terms            @relation(fields: [loan_term_id], references: [loan_term_id], onDelete: NoAction, onUpdate: NoAction)
+  organisations                                   organisations         @relation(fields: [org_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  collections                                     collections?          @relation("collectionsTocollections", fields: [parent_id], references: [collection_id], onDelete: NoAction, onUpdate: NoAction)
+  other_collections                               collections[]         @relation("collectionsTocollections")
+  documents_collections_receipt_doc_idTodocuments documents?            @relation("collections_receipt_doc_idTodocuments", fields: [receipt_doc_id], references: [document_id], onDelete: NoAction, onUpdate: NoAction)
+  sales                                           sales                 @relation(fields: [sale_id], references: [sale_id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@unique([is_active, collection_type, loan_id, sale_id, collection_subtype, emi_installment_no, loan_term_id], map: "uniq_collection_dp_emi_active_v2")
+}
+
+model command_requests {
+  id             BigInt    @id @default(autoincrement())
+  uuid           String?   @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  battery_number String
+  imei           String
+  command        String
+  command_status Boolean
+  timestamp      DateTime  @db.Timestamptz(6)
+  status         String
+  error_message  Json?
+  command_trail  Json?
+  created_at     DateTime? @db.Timestamptz(6)
+  updated_at     DateTime? @db.Timestamptz(6)
+  executed_by    BigInt?
+}
+
+model commands_template {
+  sno        Int       @id @default(autoincrement())
+  id         String    @db.VarChar(255)
+  command    String    @db.VarChar(255)
+  definition String?
+  oem        String    @db.VarChar(255)
+  created_at DateTime? @default(now()) @db.Timestamptz(6)
+  updated_at DateTime? @default(now()) @db.Timestamptz(6)
+}
+
+model config_ocr {
+  config_id     BigInt        @id @default(autoincrement())
+  org_id        BigInt
+  ocr_type      String        @unique
+  prompt        String
+  api           String
+  model         String
+  comments      String?
+  image_width   Int           @default(640)
+  image_height  Int           @default(640)
+  organisations organisations @relation(fields: [org_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@unique([org_id, ocr_type], map: "uniq_org_ocr_type")
+}
+
+model config_params {
+  config_id     BigInt        @id @default(autoincrement())
+  org_id        BigInt
+  code          String        @db.VarChar(50)
+  name          String        @db.VarChar(50)
+  value         String        @db.VarChar(200)
+  comments      String?
+  organisations organisations @relation(fields: [org_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@unique([org_id, code], map: "unique_org_code")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model credit_scores {
+  score_id             BigInt     @id @default(autoincrement())
+  customer_id          BigInt?    @unique(map: "uni_credit_scores_customer_id")
+  cibil_score          BigInt?
+  crif_score           BigInt?
+  experian_score       BigInt?
+  equifax_score        BigInt?
+  credit_report_doc_id BigInt?
+  created_at           DateTime?  @db.Timestamptz(6)
+  updated_at           DateTime?  @db.Timestamptz(6)
+  verified_by          BigInt?
+  verified_at          DateTime?  @db.Timestamptz(6)
+  status               String?    @default("PENDING")
+  rejection_reason     String?
+  credit_report_data   Json?
+  users                users?     @relation(fields: [verified_by], references: [id], map: "fk_credit_scores_verifier")
+  customers            customers? @relation(fields: [customer_id], references: [customer_id], onDelete: NoAction, onUpdate: NoAction, map: "fk_customers_credit_scores")
+
+  @@index([credit_report_doc_id], map: "idx_credit_scores_credit_report_doc_id")
+  @@index([verified_by], map: "idx_credit_scores_verified_by")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model customer_questions {
+  answer_id                                   BigInt     @id @default(autoincrement())
+  application_id                              BigInt?
+  customer_id                                 BigInt?
+  question_id                                 BigInt?
+  answer                                      String
+  is_verified                                 Boolean?   @default(false)
+  status                                      String?    @default("PENDING")
+  rejection_reason                            String?
+  verified_by                                 BigInt?
+  verified_at                                 DateTime?  @db.Timestamptz(6)
+  uploaded_by                                 BigInt?
+  uploaded_at                                 DateTime?  @db.Timestamptz(6)
+  users_customer_questions_uploaded_byTousers users?     @relation("customer_questions_uploaded_byTousers", fields: [uploaded_by], references: [id], map: "fk_customer_questions_uploader")
+  users_customer_questions_verified_byTousers users?     @relation("customer_questions_verified_byTousers", fields: [verified_by], references: [id], map: "fk_customer_questions_verifier")
+  customers                                   customers? @relation(fields: [customer_id], references: [customer_id], onDelete: NoAction, onUpdate: NoAction, map: "fk_customers_customer_questions")
+
+  @@unique([application_id, question_id], map: "unique_custquestions_app_question")
+  @@index([application_id], map: "idx_customer_questions_application_id")
+  @@index([customer_id], map: "idx_customer_questions_customer_id")
+  @@index([question_id], map: "idx_customer_questions_question_id")
+  @@index([verified_by], map: "idx_customer_questions_verified_by")
+}
+
+model customers {
+  customer_id                   BigInt                          @id @default(autoincrement())
+  name                          String
+  mobile                        String                          @unique(map: "uni_customers_mobile")
+  alternate_mobile              String?
+  is_verified                   Boolean?                        @default(false)
+  otp                           String?
+  aadhar_mobile                 String?
+  aadhar_mobile_otp             String?
+  is_aadhar_mobile_verified     Boolean?                        @default(false)
+  pan_number                    String?
+  aadhar_number                 String?
+  created_at                    DateTime?                       @db.Timestamptz(6)
+  updated_at                    DateTime?                       @db.Timestamptz(6)
+  api_aadhar_client_id          String?
+  api_pan_data                  Json?
+  api_aadhar_data               Json?
+  api_data_issue_desc           Json?
+  pancard_doc_id                BigInt?
+  aadhar_front_doc_id           BigInt?
+  aadhar_back_doc_id            BigInt?
+  photo_doc_id                  BigInt?
+  form_60_doc_id                BigInt?
+  credit_report_doc_id          BigInt?
+  org_id                        BigInt
+  collection_trans              collection_trans[]
+  credit_scores                 credit_scores?
+  customer_questions            customer_questions[]
+  organisations                 organisations                   @relation(fields: [org_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_customers_org")
+  inv_asset_history             inv_asset_history[]
+  loan_applications             loan_applications[]
+  referrers                     referrers[]
+  sales                         sales[]
+  zz_xref_f_idocuments_20241214 zz_xref_f_idocuments_20241214[]
+
+  @@unique([mobile, org_id], map: "uni_customers_mobile_org")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model db_logs {
+  log_id         BigInt         @id @default(autoincrement())
+  org_id         BigInt?
+  object_type    String         @db.VarChar(30)
+  object_name    String
+  table_name     String?
+  operation_type String?        @db.VarChar(20)
+  entities       Json?
+  executed_by    BigInt?
+  started_at     DateTime?      @default(now()) @db.Timestamptz(6)
+  completed_at   DateTime?      @db.Timestamptz(6)
+  status         String?        @default("SUCCESS") @db.VarChar(20)
+  error_message  String?
+  comments       String?
+  users          users?         @relation(fields: [executed_by], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  organisations  organisations? @relation(fields: [org_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model dealers {
+  dealer_id         BigInt              @id @default(autoincrement())
+  dealer_name       String              @db.VarChar(255)
+  dealer_cd         String              @db.VarChar(50)
+  org_id            BigInt
+  created_at        DateTime?           @default(now()) @db.Timestamptz(6)
+  organisations     organisations       @relation(fields: [org_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_dealer_org")
+  loan_applications loan_applications[]
+  sales             sales[]
+
+  @@unique([org_id, dealer_cd], map: "uq_org_dealer")
+}
+
+model document_types {
+  doc_type_id  BigInt   @id @default(autoincrement())
+  doc_name     String   @unique(map: "uni_document_types_doc_name")
+  description  String?
+  is_mandatory Boolean? @default(false)
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model documents {
+  document_id                                       BigInt                        @id @default(autoincrement())
+  doc_type_id                                       BigInt?
+  document_url                                      String                        @unique(map: "idx_unique_doc_url")
+  is_verified                                       Boolean?                      @default(false)
+  verified_by                                       BigInt?
+  verified_at                                       DateTime?                     @db.Timestamptz(6)
+  uploaded_by                                       BigInt?
+  uploaded_at                                       DateTime?                     @db.Timestamptz(6)
+  geo_location_lat                                  Decimal?                      @db.Decimal
+  geo_location_lng                                  Decimal?                      @db.Decimal
+  status                                            String?                       @default("PENDING")
+  rejection_reason                                  String?
+  is_related_parties                                Boolean?                      @default(false)
+  related_parties_id                                BigInt?
+  org_id                                            BigInt
+  access_token                                      String?                       @unique
+  access_token_expires_at                           DateTime?                     @db.Timestamptz(6)
+  collections_collections_invoice_doc_idTodocuments collections[]                 @relation("collections_invoice_doc_idTodocuments")
+  collections_collections_receipt_doc_idTodocuments collections[]                 @relation("collections_receipt_doc_idTodocuments")
+  organisations                                     organisations                 @relation(fields: [org_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_documents_org")
+  users_documents_uploaded_byTousers                users?                        @relation("documents_uploaded_byTousers", fields: [uploaded_by], references: [id], map: "fk_documents_uploader")
+  users_documents_verified_byTousers                users?                        @relation("documents_verified_byTousers", fields: [verified_by], references: [id], map: "fk_documents_verifier")
+  xref_collection_request_doc                       xref_collection_request_doc[]
+  xref_collection_trans_doc                         xref_collection_trans_doc[]
+  xref_installation_documents                       xref_installation_documents[]
+  xref_loan_documents                               xref_loan_documents?
+
+  @@index([doc_type_id], map: "idx_documents_doc_type_id")
+  @@index([verified_by], map: "idx_documents_verified_by")
+}
+
+model extra_user_permissions {
+  id            BigInt        @id @default(autoincrement())
+  user_id       BigInt
+  permission_id BigInt
+  resource_id   BigInt
+  is_active     Boolean?      @default(true)
+  created_at    DateTime?     @db.Timestamptz(6)
+  updated_at    DateTime?     @db.Timestamptz(6)
+  uuid          String?       @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  org_id        BigInt
+  organisations organisations @relation(fields: [org_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_extra_user_permissions_org")
+  permissions   permissions   @relation(fields: [permission_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_extra_user_permissions_permission")
+  resources     resources     @relation(fields: [resource_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_extra_user_permissions_resource")
+  users         users         @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_extra_user_permissions_user")
+
+  @@index([org_id], map: "idx_extra_user_permissions_org_id")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model field_inspections {
+  inspection_id         BigInt      @id @default(autoincrement())
+  customer_id           BigInt?
+  application_id        BigInt?
+  inspector_id          BigInt?
+  inspection_date       DateTime?   @default(now()) @db.Timestamptz(6)
+  is_completed          Boolean?    @default(false)
+  is_house_owned        Boolean?
+  notes                 String?
+  verified_by           BigInt?
+  verified_at           DateTime?   @db.Timestamptz(6)
+  geo_location_lat      Decimal?    @db.Decimal(10, 6)
+  geo_location_lng      Decimal?    @db.Decimal(10, 6)
+  geo_status            String?     @default("PENDING")
+  geo_rejection_reason  String?
+  geo_address           String?
+  bank_acct_holder_name String?     @db.VarChar(100)
+  bank_acct_number      String?     @db.VarChar(25)
+  bank_ifsc             String?     @db.VarChar(15)
+  bank_name             String?     @db.VarChar(100)
+  cheque_type           ChequeType?
+  geo_center_distance   Decimal?    @db.Decimal(10, 2)
+  users                 users?      @relation(fields: [verified_by], references: [id], map: "fk_field_inspections_verifier")
+
+  @@index([application_id], map: "idx_field_inspections_application_id")
+  @@index([customer_id], map: "idx_field_inspections_customer_id")
+  @@index([verified_by], map: "idx_field_inspections_verified_by")
+}
+
+model fleets {
+  id                          BigInt    @id @default(autoincrement())
+  organisation_id             BigInt
+  product_id                  BigInt
+  lot_number                  String?
+  status                      String?
+  fleet_manager               String?
+  customer_mobile_number      String
+  pin_code                    String
+  vehicle_registration_number String?
+  nbfc                        String
+  battery_number              String
+  io_t_device_imei            String?
+  simcard_msisdn              String?
+  created_at                  DateTime? @db.Timestamptz(6)
+  updated_at                  DateTime? @db.Timestamptz(6)
+  upload_status               Boolean?
+  error_message               String?
+  is_charging                 Int?      @default(1) @db.SmallInt
+  is_discharging              Int?      @default(1) @db.SmallInt
+  is_active                   Boolean?  @default(true)
+  enable_limping              Boolean?  @default(false)
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model installations {
+  installation_id                          BigInt                        @id @default(autoincrement())
+  technician_id                            BigInt?
+  installation_date                        DateTime?                     @db.Timestamp(6)
+  created_at                               DateTime?                     @default(now()) @db.Timestamp(6)
+  created_by                               BigInt?
+  install_status                           String?                       @default("PENDING") @db.VarChar(20)
+  install_reason                           String?
+  approved_by                              BigInt?
+  approved_at                              DateTime?                     @db.Timestamp(6)
+  comments                                 String?
+  extra_fields                             Json?
+  org_id                                   BigInt                        @default(1)
+  users_installations_approved_byTousers   users?                        @relation("installations_approved_byTousers", fields: [approved_by], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  organisations                            organisations                 @relation(fields: [org_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  users_installations_technician_idTousers users?                        @relation("installations_technician_idTousers", fields: [technician_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  users_installations_created_byTousers    users?                        @relation("installations_created_byTousers", fields: [created_by], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "installations_updated_by_fkey")
+  loan_applications                        loan_applications[]
+  sales                                    sales[]
+  type2_sync_logs                          type2_sync_logs?
+  xref_installation_documents              xref_installation_documents[]
+  xref_installation_product                xref_installation_product[]
+}
+
+model inv_asset_history {
+  history_id        BigInt             @id @default(autoincrement())
+  org_id            BigInt
+  customer_id       BigInt?
+  asset_type        String             @db.VarChar(20)
+  asset_serial      String?            @db.VarChar(100)
+  field_name        String             @db.VarChar(100)
+  old_value         String?            @db.VarChar(500)
+  new_value         String?            @db.VarChar(500)
+  updated_by        BigInt
+  updated_at        DateTime           @default(now()) @db.Timestamptz(6)
+  loan_id           BigInt?
+  sale_id           BigInt?
+  customers         customers?         @relation(fields: [customer_id], references: [customer_id], onDelete: NoAction, onUpdate: NoAction, map: "fk_asset_history_customer")
+  organisations     organisations      @relation(fields: [org_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_asset_history_org")
+  users             users              @relation(fields: [updated_by], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_asset_history_updated_by")
+  loan_applications loan_applications? @relation(fields: [loan_id], references: [application_id], onUpdate: NoAction, map: "fk_inv_asset_history_loan")
+  sales             sales?             @relation(fields: [sale_id], references: [sale_id], onUpdate: NoAction, map: "fk_inv_asset_history_sale")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model inv_batteries {
+  inv_battery_id                                                                               BigInt                     @id @default(autoincrement())
+  org_id                                                                                       BigInt
+  serial                                                                                       String                     @unique @db.VarChar(255)
+  status                                                                                       InvBatteryStatus
+  comments                                                                                     Json?
+  type                                                                                         InvType
+  inv_location_id                                                                              BigInt
+  lot                                                                                          String                     @db.VarChar(255)
+  inv_iot_id                                                                                   BigInt?                    @unique
+  iot_install_date                                                                             DateTime?                  @db.Timestamptz(6)
+  iot_installed_by                                                                             BigInt?
+  bms_type                                                                                     String?                    @db.VarChar(255)
+  firmware                                                                                     String?                    @db.VarChar(255)
+  xref_install_prod_id                                                                         BigInt?                    @unique
+  prod_id                                                                                      BigInt
+  created_at                                                                                   DateTime                   @db.Timestamptz(6)
+  updated_at                                                                                   DateTime?                  @db.Timestamptz(6)
+  created_by                                                                                   BigInt
+  updated_by                                                                                   BigInt
+  serv_xref_install_prod_id                                                                    BigInt?                    @unique(map: "uq_inv_batteries_serv_xref_install_prod_id")
+  replaced_battery_id                                                                          BigInt?
+  users_inv_batteries_updated_byTousers                                                        users                      @relation("inv_batteries_updated_byTousers", fields: [updated_by], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_battery_updated_by")
+  inv_batteries                                                                                inv_batteries?             @relation("inv_batteriesToinv_batteries", fields: [replaced_battery_id], references: [inv_battery_id], onDelete: NoAction, onUpdate: NoAction, map: "fk_inv_batteries_replaced_battery")
+  other_inv_batteries                                                                          inv_batteries[]            @relation("inv_batteriesToinv_batteries")
+  xref_installation_product_inv_batteries_serv_xref_install_prod_idToxref_installation_product xref_installation_product? @relation("inv_batteries_serv_xref_install_prod_idToxref_installation_product", fields: [serv_xref_install_prod_id], references: [xref_id], onDelete: NoAction, onUpdate: NoAction, map: "fk_inv_batteries_serv_xref_install_prod")
+  users_inv_batteries_created_byTousers                                                        users                      @relation("inv_batteries_created_byTousers", fields: [created_by], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  inv_iots                                                                                     inv_iots?                  @relation(fields: [inv_iot_id], references: [inv_iot_id], onDelete: NoAction, onUpdate: NoAction)
+  inv_locations                                                                                inv_locations              @relation(fields: [inv_location_id], references: [inv_location_id], onDelete: NoAction, onUpdate: NoAction)
+  oems                                                                                         oems?                      @relation(fields: [iot_installed_by], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  organisations                                                                                organisations              @relation(fields: [org_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  product_master                                                                               product_master             @relation(fields: [prod_id], references: [prod_id], onDelete: NoAction, onUpdate: NoAction)
+  xref_installation_product_inv_batteries_xref_install_prod_idToxref_installation_product      xref_installation_product? @relation("inv_batteries_xref_install_prod_idToxref_installation_product", fields: [xref_install_prod_id], references: [xref_id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model inv_chargers {
+  inv_charger_id                                                                              BigInt                     @id @default(autoincrement())
+  org_id                                                                                      BigInt
+  serial                                                                                      String                     @unique @db.VarChar(255)
+  lot                                                                                         String                     @db.VarChar(255)
+  type                                                                                        InvType
+  inv_location_id                                                                             BigInt
+  status                                                                                      InvBatteryStatus
+  comments                                                                                    Json?
+  firmware                                                                                    String?                    @db.VarChar(255)
+  xref_install_prod_id                                                                        BigInt?
+  prod_id                                                                                     BigInt
+  created_at                                                                                  DateTime                   @default(now()) @db.Timestamptz(6)
+  updated_at                                                                                  DateTime?                  @db.Timestamptz(6)
+  created_by                                                                                  BigInt
+  updated_by                                                                                  BigInt
+  serv_xref_install_prod_id                                                                   BigInt?                    @unique(map: "uq_inv_chargers_serv_xref_install_prod_id")
+  replaced_charger_id                                                                         BigInt?
+  users_inv_chargers_updated_byTousers                                                        users                      @relation("inv_chargers_updated_byTousers", fields: [updated_by], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_charger_updated_by")
+  inv_chargers                                                                                inv_chargers?              @relation("inv_chargersToinv_chargers", fields: [replaced_charger_id], references: [inv_charger_id], onDelete: NoAction, onUpdate: NoAction, map: "fk_inv_chargers_replaced_charger")
+  other_inv_chargers                                                                          inv_chargers[]             @relation("inv_chargersToinv_chargers")
+  xref_installation_product_inv_chargers_serv_xref_install_prod_idToxref_installation_product xref_installation_product? @relation("inv_chargers_serv_xref_install_prod_idToxref_installation_product", fields: [serv_xref_install_prod_id], references: [xref_id], onDelete: NoAction, onUpdate: NoAction, map: "fk_inv_chargers_serv_xref_install_prod")
+  organisations                                                                               organisations              @relation(fields: [org_id], references: [id], onUpdate: NoAction, map: "fk_sim_org")
+  users_inv_chargers_created_byTousers                                                        users                      @relation("inv_chargers_created_byTousers", fields: [created_by], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  inv_locations                                                                               inv_locations              @relation(fields: [inv_location_id], references: [inv_location_id], onDelete: NoAction, onUpdate: NoAction)
+  product_master                                                                              product_master             @relation(fields: [prod_id], references: [prod_id], onDelete: NoAction, onUpdate: NoAction)
+  xref_installation_product_inv_chargers_xref_install_prod_idToxref_installation_product      xref_installation_product? @relation("inv_chargers_xref_install_prod_idToxref_installation_product", fields: [xref_install_prod_id], references: [xref_id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model inv_create_history {
+  id                BigInt            @id @default(autoincrement())
+  asset_type        asset_type_enum
+  status            String            @default("error")
+  total_count       BigInt?
+  success_count     BigInt?
+  fail_count        BigInt?
+  uploaded_file_url String
+  error_report_url  String?
+  error_details     String?
+  created_by        BigInt
+  created_at        DateTime          @default(now()) @db.Timestamptz(6)
+  upload_type       upload_type_enum?
+  users             users             @relation(fields: [created_by], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_inv_create_history_created_by")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model inv_iots {
+  inv_iot_id                       BigInt                     @id @default(autoincrement())
+  org_id                           BigInt
+  imei                             String                     @unique @db.VarChar(100)
+  serial                           String?                    @unique @db.VarChar(100)
+  platform                         String?                    @db.VarChar(50)
+  comments                         Json?
+  lot                              String                     @db.VarChar(100)
+  inv_location_id                  BigInt
+  inv_sim_id                       BigInt?                    @unique
+  sim_install_by                   BigInt?
+  sim_install_date                 DateTime?                  @db.Timestamptz(6)
+  config_status                    String                     @db.VarChar(20)
+  config_date                      DateTime?                  @db.Timestamptz(6)
+  status                           String                     @db.VarChar(20)
+  type                             String                     @db.VarChar(20)
+  firmware                         String?                    @db.VarChar(100)
+  prod_id                          BigInt
+  xref_install_prod_id             BigInt?                    @unique
+  created_at                       DateTime                   @default(now()) @db.Timestamptz(6)
+  updated_at                       DateTime?                  @db.Timestamptz(6)
+  created_by                       BigInt
+  updated_by                       BigInt
+  inv_batteries                    inv_batteries?
+  users_inv_iots_created_byTousers users                      @relation("inv_iots_created_byTousers", fields: [created_by], references: [id], onUpdate: NoAction, map: "fk_iot_created_by")
+  inv_locations                    inv_locations              @relation(fields: [inv_location_id], references: [inv_location_id], onUpdate: NoAction, map: "fk_iot_location")
+  organisations                    organisations              @relation(fields: [org_id], references: [id], onUpdate: NoAction, map: "fk_iot_org")
+  product_master                   product_master             @relation(fields: [prod_id], references: [prod_id], onUpdate: NoAction, map: "fk_iot_prod")
+  inv_sims                         inv_sims?                  @relation(fields: [inv_sim_id], references: [inv_sim_id], onUpdate: NoAction, map: "fk_iot_sim")
+  oems                             oems?                      @relation(fields: [sim_install_by], references: [id], onUpdate: NoAction, map: "fk_iot_sim_by")
+  users_inv_iots_updated_byTousers users                      @relation("inv_iots_updated_byTousers", fields: [updated_by], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_iot_updated_by")
+  xref_installation_product        xref_installation_product? @relation(fields: [xref_install_prod_id], references: [xref_id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model inv_locations {
+  inv_location_id                       BigInt          @id @default(autoincrement())
+  org_id                                BigInt
+  location_code                         String          @unique @db.VarChar(255)
+  name                                  String          @db.VarChar(255)
+  address                               String?
+  city                                  String?         @db.VarChar(255)
+  state                                 String?         @db.VarChar(255)
+  pincode                               String?         @db.VarChar(50)
+  created_at                            DateTime        @default(now()) @db.Timestamptz(6)
+  updated_at                            DateTime?       @db.Timestamptz(6)
+  created_by                            BigInt
+  center_id                             BigInt?
+  inv_batteries                         inv_batteries[]
+  inv_chargers                          inv_chargers[]
+  inv_iots                              inv_iots[]
+  centers                               centers?        @relation(fields: [center_id], references: [center_id], onDelete: NoAction, onUpdate: NoAction)
+  users_inv_locations_created_byTousers users           @relation("inv_locations_created_byTousers", fields: [created_by], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  users_inv_locations_org_idTousers     users           @relation("inv_locations_org_idTousers", fields: [org_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  inv_sims                              inv_sims[]
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model inv_sims {
+  inv_sim_id                       BigInt         @id @default(autoincrement())
+  org_id                           BigInt
+  serial                           String         @unique @db.VarChar(100)
+  msisdn                           String         @unique @db.VarChar(20)
+  lot                              String         @db.VarChar(100)
+  inv_location_id                  BigInt
+  status                           String         @db.VarChar(20)
+  kyc_status                       String         @db.VarChar(20)
+  activation_date                  DateTime?      @db.Timestamptz(6)
+  kyc_date                         DateTime?      @db.Timestamptz(6)
+  type                             String         @db.VarChar(20)
+  apn                              String?        @db.VarChar(100)
+  comments                         Json?
+  prod_id                          BigInt
+  created_at                       DateTime       @default(now()) @db.Timestamptz(6)
+  created_by                       BigInt
+  updated_at                       DateTime?      @db.Timestamptz(6)
+  updated_by                       BigInt
+  inv_iots                         inv_iots?
+  users_inv_sims_created_byTousers users          @relation("inv_sims_created_byTousers", fields: [created_by], references: [id], onUpdate: NoAction, map: "fk_sim_created_by")
+  inv_locations                    inv_locations  @relation(fields: [inv_location_id], references: [inv_location_id], onUpdate: NoAction, map: "fk_sim_location")
+  organisations                    organisations  @relation(fields: [org_id], references: [id], onUpdate: NoAction, map: "fk_sim_org")
+  product_master                   product_master @relation(fields: [prod_id], references: [prod_id], onUpdate: NoAction, map: "fk_sim_product")
+  users_inv_sims_updated_byTousers users          @relation("inv_sims_updated_byTousers", fields: [updated_by], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_sim_updated_by")
+}
+
+model io_t_devices {
+  id              BigInt    @id @default(autoincrement())
+  organisation_id BigInt
+  product_id      BigInt
+  lot_number      String?
+  status          String?
+  io_toem         String?
+  imei_number     String?
+  device_id       String?
+  on_moving_freq  Decimal?  @db.Decimal
+  on_stop_freq    Decimal?  @db.Decimal
+  created_at      DateTime? @db.Timestamptz(6)
+  updated_at      DateTime? @db.Timestamptz(6)
+  upload_status   Boolean?
+  error_message   String?
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model loan_applications {
+  application_id               BigInt                @id @default(autoincrement())
+  customer_id                  BigInt?
+  product_id                   BigInt?
+  center_id                    BigInt
+  close_status                 String?               @default("PENDING")
+  created_at                   DateTime              @db.Timestamptz(6)
+  updated_at                   DateTime?             @db.Timestamptz(6)
+  credit_approved_by           BigInt?
+  credit_approved_at           DateTime?             @db.Timestamptz(6)
+  application_summary          String?
+  credit_summary               String?
+  other_comments               String?
+  credit_status                String?               @default("PENDING")
+  doc_status                   String?               @default("PENDING")
+  credit_reason                String?
+  doc_reason                   String?
+  created_by                   BigInt
+  prod_pkg_id                  BigInt
+  referral_link_id             BigInt                @default(0)
+  installation_id              BigInt?               @default(0)
+  vehicle_id                   BigInt?
+  log_comments                 Json?                 @default("[]")
+  is_house_owned               Boolean?
+  num_years_residing           Float?
+  gurantor_customer_id         BigInt?
+  cob_customer_id              BigInt?
+  gurantor_relation_w_borrower String?               @db.VarChar(50)
+  cob_relation_w_borrower      String?               @db.VarChar(50)
+  gurantor_current_address     Json?                 @db.Json
+  gurantor_permanent_address   Json?                 @db.Json
+  gurantor_other_address       Json?                 @db.Json
+  cob_current_address          Json?                 @db.Json
+  cob_permanent_address        Json?                 @db.Json
+  cob_other_address            Json?                 @db.Json
+  gurantor_is_housed_owned     Boolean?
+  gurantor_num_years_residing  Float?
+  cob_is_housed_owned          Boolean?
+  cob_num_years_residing       Float?
+  current_address              Json?                 @db.Json
+  permanent_address            Json?                 @db.Json
+  other_address                Json?                 @db.Json
+  address_verification_doc     String?               @db.VarChar(50)
+  closed_at                    DateTime?             @db.Timestamptz(6)
+  nbfc_id                      BigInt?
+  org_id                       BigInt?
+  close_by                     BigInt?
+  close_reason                 String?
+  close_details                Json?
+  dealer_id                    BigInt?
+  collections                  collections[]
+  inv_asset_history            inv_asset_history[]
+  centers                      centers               @relation(fields: [center_id], references: [center_id], map: "fk_center_id")
+  customers                    customers?            @relation(fields: [customer_id], references: [customer_id], onDelete: NoAction, onUpdate: NoAction, map: "fk_customers_loan_applications")
+  installations                installations?        @relation(fields: [installation_id], references: [installation_id], onDelete: NoAction, onUpdate: NoAction, map: "fk_installation_id")
+  dealers                      dealers?              @relation(fields: [dealer_id], references: [dealer_id], onDelete: NoAction, onUpdate: NoAction, map: "fk_loan_app_dealer")
+  users                        users                 @relation(fields: [created_by], references: [id], onDelete: SetNull, map: "fk_loan_applications_creator")
+  nbfcs                        nbfcs?                @relation(fields: [nbfc_id], references: [nbfc_id], onDelete: Restrict, map: "fk_loan_applications_nbfc")
+  referral_links               referral_links        @relation(fields: [referral_link_id], references: [referral_link_id], onDelete: NoAction, onUpdate: NoAction, map: "fk_referral_link")
+  organisations                organisations?        @relation(fields: [org_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  product_packages             product_packages      @relation(fields: [prod_pkg_id], references: [prod_pkg_id], onDelete: NoAction, onUpdate: NoAction)
+  loan_terms                   loan_terms[]
+  xref_loan_documents          xref_loan_documents[]
+
+  @@index([center_id], map: "idx_loan_applications_center_id")
+  @@index([created_by], map: "idx_loan_applications_created_by")
+  @@index([customer_id], map: "idx_loan_applications_customer_id")
+  @@index([product_id], map: "idx_loan_applications_product_id")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model loan_terms {
+  loan_term_id      BigInt            @id @default(autoincrement())
+  org_id            BigInt
+  center_id         BigInt
+  loan_id           BigInt
+  loan_amount       Decimal?          @db.Decimal(10, 2)
+  dp_amt            Decimal?          @db.Decimal(10, 2)
+  emi_amt           Decimal?          @db.Decimal(10, 2)
+  emi_freq          String            @default("MONTH") @db.VarChar(50)
+  emi_tenure        Int?
+  emi_payment_day   Int?
+  start_at          DateTime          @default(now()) @db.Timestamptz(6)
+  end_at            DateTime?         @db.Timestamptz(6)
+  created_by        BigInt
+  created_at        DateTime          @default(now()) @db.Timestamptz(6)
+  collections       collections[]
+  centers           centers           @relation(fields: [center_id], references: [center_id], onDelete: NoAction, onUpdate: NoAction)
+  users             users             @relation(fields: [created_by], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  loan_applications loan_applications @relation(fields: [loan_id], references: [application_id], onDelete: NoAction, onUpdate: NoAction)
+  organisations     organisations     @relation(fields: [org_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@unique([loan_id, end_at], map: "unique_loan_end")
+}
+
+model nbfcs {
+  nbfc_id           BigInt              @id @default(autoincrement())
+  nbfc_name         String
+  nbfc_cd           String              @db.VarChar(255)
+  org_id            BigInt
+  address           String?
+  created_at        DateTime?           @default(now()) @db.Timestamptz(6)
+  updated_at        DateTime?           @db.Timestamp(6)
+  loan_applications loan_applications[]
+  organisations     organisations       @relation(fields: [org_id], references: [id], map: "fk_nbfcs_org")
+
+  @@unique([nbfc_cd, org_id], map: "uq_nbfc_cd_org_id")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model oems {
+  id             BigInt           @id @default(autoincrement())
+  uuid           String?          @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  oem_id         String
+  oem_name       String
+  oem_address    String?
+  oem_status     String?          @default("Active")
+  created_at     DateTime?        @db.Timestamptz(6)
+  updated_at     DateTime?        @db.Timestamptz(6)
+  org_id         BigInt           @default(1)
+  inv_batteries  inv_batteries[]
+  inv_iots       inv_iots[]
+  organisations  organisations    @relation(fields: [org_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_oems_org_id")
+  product_master product_master[]
+
+  @@unique([org_id, oem_id], map: "uni_oems_org_id_oem_id")
+  @@unique([org_id, oem_id], map: "uni_oems_org_oem")
+}
+
+model org_types {
+  id            BigInt          @id @default(autoincrement())
+  name          String
+  is_active     Boolean?        @default(true)
+  created_at    DateTime?       @db.Timestamptz(6)
+  updated_at    DateTime?       @db.Timestamptz(6)
+  uuid          String?         @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  organisations organisations[]
+}
+
+model organisations {
+  id                           BigInt                         @id @default(autoincrement())
+  name                         String                         @unique(map: "uni_organisations_name")
+  org_type_id                  BigInt
+  is_active                    Boolean?                       @default(true)
+  created_at                   DateTime?                      @db.Timestamptz(6)
+  updated_at                   DateTime?                      @db.Timestamptz(6)
+  uuid                         String?                        @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  batch_qc_checks              batch_qc_checks[]
+  centers                      centers[]
+  collection_comments          collection_comments[]
+  collection_request           collection_request[]
+  collection_request_types     collection_request_types[]
+  collection_scrap_types       collection_scrap_types[]
+  collection_trans             collection_trans[]
+  collections                  collections[]
+  config_ocr                   config_ocr[]
+  config_params                config_params[]
+  customers                    customers[]
+  db_logs                      db_logs[]
+  dealers                      dealers[]
+  documents                    documents[]
+  extra_user_permissions       extra_user_permissions[]
+  installations                installations[]
+  inv_asset_history            inv_asset_history[]
+  inv_batteries                inv_batteries[]
+  inv_chargers                 inv_chargers[]
+  inv_iots                     inv_iots[]
+  inv_sims                     inv_sims[]
+  loan_applications            loan_applications[]
+  loan_terms                   loan_terms[]
+  nbfcs                        nbfcs[]
+  oems                         oems[]
+  org_types                    org_types                      @relation(fields: [org_type_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_organisations_org_type")
+  product_master               product_master[]
+  product_packages             product_packages[]
+  product_types                product_types[]
+  questions                    questions[]
+  referral_types               referral_types[]
+  referrals                    referrals[]
+  referrer_types               referrer_types[]
+  referrers                    referrers[]
+  resources                    resources[]
+  role_permissions             role_permissions[]
+  roles                        roles[]
+  sales                        sales[]
+  user_roles                   user_roles[]
+  users                        users[]
+  vehicles                     vehicles[]
+  xref_collection_request_doc  xref_collection_request_doc[]
+  xref_collection_scrap_center xref_collection_scrap_center[]
+  xref_collection_trans_doc    xref_collection_trans_doc[]
+  xref_user_centers            xref_user_centers[]
+}
+
+model permissions {
+  id                     BigInt                   @id @default(autoincrement())
+  read                   Boolean?                 @default(false)
+  write                  Boolean?                 @default(false)
+  edit                   Boolean?                 @default(false)
+  remove                 Boolean?                 @default(false)
+  is_active              Boolean?                 @default(true)
+  created_at             DateTime?                @db.Timestamptz(6)
+  updated_at             DateTime?                @db.Timestamptz(6)
+  uuid                   String?                  @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  extra_user_permissions extra_user_permissions[]
+  role_permissions       role_permissions[]
+
+  @@unique([read, write, edit, remove], map: "idx_permissions_unique_combination")
+}
+
+model process_latest_refresh {
+  process_cd   String   @unique
+  process_name String?  @db.VarChar(100)
+  refresh_at   DateTime @db.Timestamptz(6)
+}
+
+model product_codes {
+  product_id   BigInt @id @default(autoincrement())
+  product_name String @db.VarChar(100)
+}
+
+model product_master {
+  prod_id                   BigInt                      @id(map: "products_pkey1") @default(autoincrement())
+  prod_cd                   String                      @unique(map: "products_prod_cd_key") @db.VarChar(50)
+  prod_name                 String                      @db.VarChar(50)
+  prod_desc                 String?                     @db.VarChar(100)
+  prod_type_id              BigInt
+  prod_subtype              String?                     @db.VarChar(50)
+  is_visible                Boolean                     @default(true)
+  prod_category             String                      @db.VarChar(50)
+  model                     String?                     @db.VarChar(50)
+  capacity                  String?                     @db.VarChar(50)
+  voltage                   String?                     @db.VarChar(50)
+  mfr                       String?                     @db.VarChar(50)
+  submfr1                   String?                     @db.VarChar(50)
+  submfr2                   String?                     @db.VarChar(50)
+  submfr3                   String?                     @db.VarChar(50)
+  color                     String?                     @db.VarChar(50)
+  created_at                DateTime?                   @default(now()) @db.Timestamptz(6)
+  created_by                BigInt?
+  oem_id                    BigInt
+  prod_spec                 Json?                       @db.Json
+  org_id                    BigInt
+  invoice_product_sgst      String                      @db.VarChar(50)
+  invoice_product_cgst      String                      @db.VarChar(50)
+  invoice_hsn_number        String                      @db.VarChar(50)
+  invoice_product_rate      Decimal?                    @db.Decimal(10, 2)
+  inv_batteries             inv_batteries[]
+  inv_chargers              inv_chargers[]
+  inv_iots                  inv_iots[]
+  inv_sims                  inv_sims[]
+  oems                      oems                        @relation(fields: [oem_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_oem")
+  organisations             organisations               @relation(fields: [org_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_org")
+  product_types             product_types               @relation(fields: [prod_type_id], references: [prod_type_id], onDelete: NoAction, onUpdate: NoAction, map: "products_prod_type_id_fkey")
+  users                     users?                      @relation(fields: [created_by], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "products_updated_by_fkey")
+  xref_installation_product xref_installation_product[]
+}
+
+model product_packages {
+  prod_pkg_id           BigInt                  @id @default(autoincrement())
+  prod_pkg_cd           String                  @unique @db.VarChar(50)
+  prod_pkg_name         String                  @db.VarChar(50)
+  prod_pkg_desc         String?                 @db.VarChar(100)
+  is_visible            Boolean                 @default(true)
+  created_at            DateTime?               @default(now()) @db.Timestamp(6)
+  created_by            BigInt?
+  extra_fields_schema   Json?
+  org_id                BigInt
+  tag                   String[]                @db.VarChar(20)
+  loan_applications     loan_applications[]
+  users                 users?                  @relation(fields: [created_by], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_product_packages_created_by")
+  organisations         organisations           @relation(fields: [org_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_product_packages_org")
+  sales                 sales[]
+  xref_prodpkg_prodtype xref_prodpkg_prodtype[]
+}
+
+model product_types {
+  prod_type_id              BigInt                      @id @default(autoincrement())
+  prod_type_cd              String                      @db.VarChar(50)
+  prod_type_name            String                      @db.VarChar(50)
+  prod_type_desc            String?                     @db.VarChar(100)
+  created_at                DateTime?                   @default(now()) @db.Timestamp(6)
+  created_by                BigInt?
+  org_id                    BigInt
+  product_master            product_master[]
+  users                     users?                      @relation(fields: [created_by], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_product_types_created_by")
+  organisations             organisations               @relation(fields: [org_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_product_types_org")
+  xref_installation_product xref_installation_product[]
+  xref_prodpkg_prodtype     xref_prodpkg_prodtype[]
+
+  @@unique([prod_type_cd, org_id], map: "product_types_prod_type_cd_key")
+}
+
+model products {
+  id         BigInt    @id @default(autoincrement())
+  uuid       String?   @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  type       String
+  subtype    String
+  vendor     String
+  capacity   BigInt
+  created_at DateTime? @db.Timestamptz(6)
+  updated_at DateTime? @db.Timestamptz(6)
+  is_active  Boolean?  @default(true)
+}
+
+model questions {
+  question_id      BigInt        @id @default(autoincrement())
+  question_text    String        @unique(map: "idx_unique_question_text")
+  type             String?
+  expected_answers String[]
+  is_mandatory     Boolean?      @default(false)
+  display_seq      BigInt
+  org_id           BigInt
+  organisations    organisations @relation(fields: [org_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_questions_org")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model referral_links {
+  referral_link_id                        BigInt              @id @default(autoincrement())
+  created_at                              DateTime?           @default(now()) @db.Timestamp(6)
+  created_by                              BigInt?
+  referral_status                         String              @default("PENDING") @db.VarChar(20)
+  referral_reason                         String?
+  approved_at                             DateTime?           @db.Timestamptz(6)
+  approved_by                             BigInt?
+  loan_applications                       loan_applications[]
+  users_referral_links_approved_byTousers users?              @relation("referral_links_approved_byTousers", fields: [approved_by], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_referral_links_approved_by")
+  users_referral_links_created_byTousers  users?              @relation("referral_links_created_byTousers", fields: [created_by], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "referral_links_updated_by_fkey")
+  referrals                               referrals[]
+  sales                                   sales[]
+}
+
+model referral_types {
+  referral_type_cd   String        @id @db.VarChar(50)
+  referral_type_name String        @db.VarChar(50)
+  referral_type_desc String?       @db.VarChar(100)
+  created_at         DateTime?     @default(now()) @db.Timestamp(6)
+  org_id             BigInt
+  organisations      organisations @relation(fields: [org_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_referral_types_org")
+  referrals          referrals[]
+}
+
+model referrals {
+  referral_id      BigInt         @id(map: "referrals_referrer_pkey") @default(autoincrement())
+  referral_link_id BigInt
+  referrer_id      BigInt
+  referral_type_cd String         @default("PRIM") @db.VarChar(50)
+  created_at       DateTime?      @default(now()) @db.Timestamp(6)
+  created_by       BigInt?
+  org_id           BigInt
+  organisations    organisations  @relation(fields: [org_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_referral_org")
+  referrers        referrers      @relation(fields: [referrer_id], references: [referrer_id], onDelete: NoAction, onUpdate: NoAction)
+  referral_links   referral_links @relation(fields: [referral_link_id], references: [referral_link_id], onDelete: NoAction, onUpdate: NoAction, map: "referrals_referrer_referral_link_id_fkey")
+  referral_types   referral_types @relation(fields: [referral_type_cd], references: [referral_type_cd], onDelete: NoAction, onUpdate: NoAction, map: "referrals_referrer_referral_type_cd_fkey")
+  users            users?         @relation(fields: [created_by], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "referrals_updated_by_fkey")
+
+  @@unique([referral_link_id, referrer_id], map: "unique_referrals_link_referrer")
+}
+
+model referrer_types {
+  referrer_type_cd   String        @id @db.VarChar(50)
+  referrer_type_name String        @db.VarChar(50)
+  referrer_type_desc String?       @db.VarChar(100)
+  created_at         DateTime?     @default(now()) @db.Timestamp(6)
+  org_id             BigInt
+  organisations      organisations @relation(fields: [org_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_referrer_types_org")
+  referrers          referrers[]
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model referrers {
+  referrer_id                       BigInt          @id @default(autoincrement())
+  referrer_type_cd                  String?         @db.VarChar(50)
+  user_id                           BigInt          @default(0)
+  customer_id                       BigInt          @default(0)
+  name                              String?         @db.VarChar(100)
+  mobile                            String?         @db.VarChar(15)
+  created_at                        DateTime?       @default(now()) @db.Timestamp(6)
+  created_by                        BigInt?
+  org_id                            BigInt
+  referrals                         referrals[]
+  organisations                     organisations   @relation(fields: [org_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_referrer_org")
+  customers                         customers       @relation(fields: [customer_id], references: [customer_id], onDelete: NoAction, onUpdate: NoAction)
+  referrer_types                    referrer_types? @relation(fields: [referrer_type_cd], references: [referrer_type_cd], onDelete: NoAction, onUpdate: NoAction)
+  users_referrers_created_byTousers users?          @relation("referrers_created_byTousers", fields: [created_by], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "referrers_updated_by_fkey")
+  users_referrers_user_idTousers    users           @relation("referrers_user_idTousers", fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model resource_sub_types {
+  id         BigInt      @id @default(autoincrement())
+  name       String      @unique(map: "resource_sub_types_name_unique")
+  is_active  Boolean?    @default(true)
+  created_at DateTime?   @db.Timestamptz(6)
+  updated_at DateTime?   @db.Timestamptz(6)
+  uuid       String?     @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  resources  resources[]
+}
+
+model resource_types {
+  id         BigInt      @id @default(autoincrement())
+  name       String      @unique(map: "resource_types_name_unique")
+  is_active  Boolean?    @default(true)
+  created_at DateTime?   @db.Timestamptz(6)
+  updated_at DateTime?   @db.Timestamptz(6)
+  uuid       String?     @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  resources  resources[]
+}
+
+model resources {
+  id                     BigInt                   @id @default(autoincrement())
+  resource_name          String
+  type_id                BigInt
+  sub_type_id            BigInt
+  is_active              Boolean?                 @default(true)
+  created_at             DateTime?                @db.Timestamptz(6)
+  updated_at             DateTime?                @db.Timestamptz(6)
+  uuid                   String?                  @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  group                  String                   @default("data")
+  org_id                 BigInt
+  extra_user_permissions extra_user_permissions[]
+  organisations          organisations            @relation(fields: [org_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_resources_org")
+  resource_sub_types     resource_sub_types       @relation(fields: [sub_type_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_resources_resource_sub_type")
+  resource_types         resource_types           @relation(fields: [type_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_resources_resource_type")
+  role_permissions       role_permissions[]
+
+  @@unique([resource_name, type_id, sub_type_id], map: "idx_unique_resource_combination")
+  @@unique([resource_name, type_id, sub_type_id], map: "unique_resource_combination")
+}
+
+model role_permissions {
+  id            BigInt        @id @default(autoincrement())
+  role_id       BigInt
+  permission_id BigInt
+  resource_id   BigInt
+  is_active     Boolean?      @default(true)
+  created_at    DateTime?     @db.Timestamptz(6)
+  updated_at    DateTime?     @db.Timestamptz(6)
+  uuid          String?       @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  org_id        BigInt
+  organisations organisations @relation(fields: [org_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_role_permissions_org")
+  permissions   permissions   @relation(fields: [permission_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_role_permissions_permission")
+  resources     resources     @relation(fields: [resource_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_role_permissions_resource")
+  roles         roles         @relation(fields: [role_id], references: [id], onDelete: NoAction, map: "fk_roles_role_permission")
+
+  @@unique([role_id, permission_id, resource_id], map: "idx_role_permissions_unique_combination")
+  @@unique([role_id, resource_id], map: "unique_roleperms_role_resource")
+}
+
+model roles {
+  id               BigInt             @id @default(autoincrement())
+  role_name        String             @unique(map: "uni_roles_role_name")
+  is_active        Boolean?           @default(true)
+  created_at       DateTime?          @db.Timestamptz(6)
+  updated_at       DateTime?          @db.Timestamptz(6)
+  uuid             String?            @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  role_cd          String             @unique(map: "idx_roles_role_cd") @db.VarChar(50)
+  org_id           BigInt
+  role_permissions role_permissions[]
+  organisations    organisations      @relation(fields: [org_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_roles_org")
+  user_roles       user_roles[]
+
+  @@index([org_id], map: "idx_roles_org_id")
+}
+
+model rpt_lms_payment_mnly {
+  center_id           BigInt
+  region_id           String?  @db.VarChar(50)
+  month               DateTime @default(dbgenerated("(date_trunc('month'::text, (CURRENT_DATE)::timestamp with time zone))::date")) @db.Date
+  dp_due_count        Int?
+  dp_due_amt          Float?
+  dp_paid_count       Int?
+  dp_paid_cash_amt    Float?
+  dp_paid_online_amt  Float?
+  emi_due_count       Int?
+  emi_due_amt         Float?
+  emi_paid_count      Int?
+  emi_paid_cash_amt   Float?
+  emi_paid_online_amt Float?
+  closed_count        Int?
+  recovered_count     Int?
+  returned_count      Int?
+  emi_0_2_count       Int?
+  emi_3_7_count       Int?
+  emi_8_15_count      Int?
+  emi_16_30_count     Int?
+  emi_31_60_count     Int?
+  emi_61_90_count     Int?
+  emi_gt_90_count     Int?
+  emi_not_paid_count  Int?
+  org_id              BigInt
+  nbfc_id             BigInt
+  prod_pkg_id         BigInt
+  centers             centers  @relation(fields: [center_id], references: [center_id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@id([org_id, center_id, nbfc_id, prod_pkg_id, month], map: "rpt_lms_payment_mnly_pk")
+}
+
+model rpt_lms_payment_mnly_stage {
+  center_id           BigInt
+  region_id           String?  @db.VarChar(50)
+  month               DateTime @default(dbgenerated("(date_trunc('month'::text, (CURRENT_DATE)::timestamp with time zone))::date")) @db.Date
+  dp_due_count        Int?
+  dp_due_amt          Float?
+  dp_paid_count       Int?
+  dp_paid_cash_amt    Float?
+  dp_paid_online_amt  Float?
+  emi_due_count       Int?
+  emi_due_amt         Float?
+  emi_paid_count      Int?
+  emi_paid_cash_amt   Float?
+  emi_paid_online_amt Float?
+  closed_count        Int?
+  recovered_count     Int?
+  returned_count      Int?
+  emi_0_2_count       Int?
+  emi_3_7_count       Int?
+  emi_8_15_count      Int?
+  emi_16_30_count     Int?
+  emi_31_60_count     Int?
+  emi_61_90_count     Int?
+  emi_gt_90_count     Int?
+  emi_not_paid_count  Int?
+  org_id              BigInt
+  nbfc_id             BigInt
+  prod_pkg_id         BigInt
+  centers             centers  @relation(fields: [center_id], references: [center_id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@id([org_id, center_id, nbfc_id, prod_pkg_id, month], map: "rpt_lms_payment_mnly_stage_pk")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model sales {
+  sale_id           BigInt              @id @default(autoincrement())
+  customer_id       BigInt
+  center_id         BigInt
+  installation_id   BigInt              @default(0)
+  referral_link_id  BigInt              @default(0)
+  sale_qty          BigInt
+  sale_amount       Decimal             @db.Decimal(10, 2)
+  created_at        DateTime?           @default(now()) @db.Timestamp(6)
+  created_by        BigInt?
+  prod_pkg_id       BigInt
+  log_comments      Json?               @default("[]")
+  close_by          BigInt?
+  close_reason      String?
+  close_details     Json?
+  close_status      String              @default("PENDING") @db.VarChar(50)
+  close_at          DateTime?           @db.Timestamptz(6)
+  dealer_id         BigInt?
+  org_id            BigInt
+  collections       collections[]
+  inv_asset_history inv_asset_history[]
+  dealers           dealers?            @relation(fields: [dealer_id], references: [dealer_id], onDelete: NoAction, onUpdate: NoAction, map: "fk_sales_dealer")
+  organisations     organisations       @relation(fields: [org_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_sales_org")
+  centers           centers             @relation(fields: [center_id], references: [center_id], onDelete: NoAction, onUpdate: NoAction)
+  customers         customers           @relation(fields: [customer_id], references: [customer_id], onDelete: NoAction, onUpdate: NoAction)
+  installations     installations       @relation(fields: [installation_id], references: [installation_id], onDelete: NoAction, onUpdate: NoAction)
+  product_packages  product_packages    @relation(fields: [prod_pkg_id], references: [prod_pkg_id], onDelete: NoAction, onUpdate: NoAction)
+  referral_links    referral_links      @relation(fields: [referral_link_id], references: [referral_link_id], onDelete: NoAction, onUpdate: NoAction)
+  users             users?              @relation(fields: [created_by], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "sales_updated_by_fkey")
+}
+
+model sim_cards {
+  id                        BigInt    @id @default(autoincrement())
+  organisation_id           BigInt
+  product_id                BigInt
+  lot_number                String?
+  status                    String?
+  avin                      String
+  vin                       String
+  sim_number                String?
+  msisdn_number             String
+  sim_service_provider_name String
+  icc_id                    String?
+  apn_name                  String?
+  created_at                DateTime? @db.Timestamptz(6)
+  updated_at                DateTime? @db.Timestamptz(6)
+  upload_status             Boolean?
+  error_message             String?
+}
+
+model type2_sync_logs {
+  installation_id BigInt        @id
+  created_by      BigInt?
+  comments        String?       @db.VarChar(25)
+  created_at      DateTime?     @default(now()) @db.Timestamp(6)
+  users           users?        @relation(fields: [created_by], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_created_by")
+  installations   installations @relation(fields: [installation_id], references: [installation_id], onDelete: NoAction, onUpdate: NoAction, map: "fk_installation")
+}
+
+model upload_file_data {
+  id             BigInt    @id @default(autoincrement())
+  lot_number     String?
+  type           String
+  upload_file_id BigInt
+  data           Json
+  status         String
+  error          Json?
+  created_at     DateTime? @db.Timestamptz(6)
+  updated_at     DateTime? @db.Timestamptz(6)
+}
+
+model upload_files {
+  id         BigInt    @id @default(autoincrement())
+  lot_number String?
+  type       String
+  status     String
+  error      Json?
+  created_at DateTime? @db.Timestamptz(6)
+  updated_at DateTime? @db.Timestamptz(6)
+}
+
+model user_roles {
+  id            BigInt        @id @default(autoincrement())
+  user_id       BigInt        @unique(map: "idx_user_roles_user_id")
+  role_id       BigInt
+  is_active     Boolean?      @default(true)
+  created_at    DateTime?     @db.Timestamptz(6)
+  updated_at    DateTime?     @db.Timestamptz(6)
+  uuid          String?       @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  org_id        BigInt
+  organisations organisations @relation(fields: [org_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_user_roles_org")
+  roles         roles         @relation(fields: [role_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_user_roles_role")
+  users         users         @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_user_roles_user")
+
+  @@unique([user_id, role_id, org_id], map: "unique_userid_roleid_org")
+  @@index([org_id], map: "idx_user_roles_org_id")
+}
+
+model users {
+  id                                                       BigInt                         @id @default(autoincrement())
+  name                                                     String
+  otp                                                      String
+  mobile                                                   String                         @unique(map: "idx_users_mobile")
+  organisation_id                                          BigInt
+  is_active                                                Boolean?                       @default(true)
+  created_at                                               DateTime?                      @db.Timestamptz(6)
+  updated_at                                               DateTime?                      @db.Timestamptz(6)
+  uuid                                                     String?                        @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  last_activity                                            DateTime?                      @db.Timestamptz(6)
+  batch_qc_checks                                          batch_qc_checks[]
+  centers                                                  centers[]
+  collection_comments                                      collection_comments[]
+  collection_request_collection_request_created_byTousers  collection_request[]           @relation("collection_request_created_byTousers")
+  collection_request_collection_request_reviewed_byTousers collection_request[]           @relation("collection_request_reviewed_byTousers")
+  collection_request_types                                 collection_request_types[]
+  collection_scrap_types                                   collection_scrap_types[]
+  collection_trans_collection_trans_created_byTousers      collection_trans[]             @relation("collection_trans_created_byTousers")
+  collection_trans_collection_trans_from_userTousers       collection_trans[]             @relation("collection_trans_from_userTousers")
+  collection_trans_collection_trans_recon_byTousers        collection_trans[]             @relation("collection_trans_recon_byTousers")
+  collection_trans_collection_trans_recorded_byTousers     collection_trans[]             @relation("collection_trans_recorded_byTousers")
+  collection_trans_collection_trans_to_userTousers         collection_trans[]             @relation("collection_trans_to_userTousers")
+  collections_collections_caller_idTousers                 collections[]                  @relation("collections_caller_idTousers")
+  collections_collections_collector_idTousers              collections[]                  @relation("collections_collector_idTousers")
+  collections_collections_created_byTousers                collections[]                  @relation("collections_created_byTousers")
+  credit_scores                                            credit_scores[]
+  customer_questions_customer_questions_uploaded_byTousers customer_questions[]           @relation("customer_questions_uploaded_byTousers")
+  customer_questions_customer_questions_verified_byTousers customer_questions[]           @relation("customer_questions_verified_byTousers")
+  db_logs                                                  db_logs[]
+  documents_documents_uploaded_byTousers                   documents[]                    @relation("documents_uploaded_byTousers")
+  documents_documents_verified_byTousers                   documents[]                    @relation("documents_verified_byTousers")
+  extra_user_permissions                                   extra_user_permissions[]
+  field_inspections                                        field_inspections[]
+  installations_installations_approved_byTousers           installations[]                @relation("installations_approved_byTousers")
+  installations_installations_technician_idTousers         installations[]                @relation("installations_technician_idTousers")
+  installations_installations_created_byTousers            installations[]                @relation("installations_created_byTousers")
+  inv_asset_history                                        inv_asset_history[]
+  inv_batteries_inv_batteries_updated_byTousers            inv_batteries[]                @relation("inv_batteries_updated_byTousers")
+  inv_batteries_inv_batteries_created_byTousers            inv_batteries[]                @relation("inv_batteries_created_byTousers")
+  inv_chargers_inv_chargers_updated_byTousers              inv_chargers[]                 @relation("inv_chargers_updated_byTousers")
+  inv_chargers_inv_chargers_created_byTousers              inv_chargers[]                 @relation("inv_chargers_created_byTousers")
+  inv_create_history                                       inv_create_history[]
+  inv_iots_inv_iots_created_byTousers                      inv_iots[]                     @relation("inv_iots_created_byTousers")
+  inv_iots_inv_iots_updated_byTousers                      inv_iots[]                     @relation("inv_iots_updated_byTousers")
+  inv_locations_inv_locations_created_byTousers            inv_locations[]                @relation("inv_locations_created_byTousers")
+  inv_locations_inv_locations_org_idTousers                inv_locations[]                @relation("inv_locations_org_idTousers")
+  inv_sims_inv_sims_created_byTousers                      inv_sims[]                     @relation("inv_sims_created_byTousers")
+  inv_sims_inv_sims_updated_byTousers                      inv_sims[]                     @relation("inv_sims_updated_byTousers")
+  loan_applications                                        loan_applications[]
+  loan_terms                                               loan_terms[]
+  product_master                                           product_master[]
+  product_packages                                         product_packages[]
+  product_types                                            product_types[]
+  referral_links_referral_links_approved_byTousers         referral_links[]               @relation("referral_links_approved_byTousers")
+  referral_links_referral_links_created_byTousers          referral_links[]               @relation("referral_links_created_byTousers")
+  referrals                                                referrals[]
+  referrers_referrers_created_byTousers                    referrers[]                    @relation("referrers_created_byTousers")
+  referrers_referrers_user_idTousers                       referrers[]                    @relation("referrers_user_idTousers")
+  sales                                                    sales[]
+  type2_sync_logs                                          type2_sync_logs[]
+  user_roles                                               user_roles?
+  organisations                                            organisations                  @relation(fields: [organisation_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_users_organisation")
+  xref_collection_request_doc                              xref_collection_request_doc[]
+  xref_collection_scrap_center                             xref_collection_scrap_center[]
+  xref_collection_trans_doc                                xref_collection_trans_doc[]
+  xref_installation_documents                              xref_installation_documents[]
+  xref_installation_product                                xref_installation_product[]
+  xref_prodpkg_prodtype                                    xref_prodpkg_prodtype[]
+  xref_user_centers_xref_user_centers_created_byTousers    xref_user_centers[]            @relation("xref_user_centers_created_byTousers")
+  xref_user_centers_xref_user_centers_user_idTousers       xref_user_centers[]            @relation("xref_user_centers_user_idTousers")
+}
+
+model vehicles {
+  vehicle_id                         BigInt        @id @default(autoincrement())
+  registration_number                String        @unique(map: "uni_vehicles_registration_number") @db.VarChar(20)
+  registration_city                  String?       @db.VarChar(50)
+  is_financed                        Boolean?      @default(false)
+  is_hypothecated                    Boolean?      @default(false)
+  hypothecation_bank                 String?       @db.VarChar(100)
+  dealer_name                        String?       @db.VarChar(100)
+  dealer_mobile                      String?       @db.VarChar(15)
+  driver_name                        String?       @db.VarChar(100)
+  purchase_date                      DateTime?     @db.Timestamptz(6)
+  vehicle_photo_id                   BigInt?
+  rc_photo_id                        BigInt?
+  municipality_registration_photo_id BigInt?
+  created_at                         DateTime?     @db.Timestamptz(6)
+  updated_at                         DateTime?     @db.Timestamptz(6)
+  rc_front_doc_id                    BigInt?
+  rc_back_doc_id                     BigInt?
+  api_rc_data                        Json?         @default("{}")
+  org_id                             BigInt
+  organisations                      organisations @relation(fields: [org_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_vehicles_org")
+}
+
+model xref_collection_request_doc {
+  xref_id            BigInt             @id @default(autoincrement())
+  org_id             BigInt
+  request_id         BigInt
+  document_id        BigInt
+  created_by         BigInt
+  created_at         DateTime           @default(now()) @db.Timestamptz(6)
+  users              users              @relation(fields: [created_by], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  documents          documents          @relation(fields: [document_id], references: [document_id], onDelete: NoAction, onUpdate: NoAction)
+  organisations      organisations      @relation(fields: [org_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  collection_request collection_request @relation(fields: [request_id], references: [request_id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@unique([request_id, document_id], map: "uq_collection_request_doc")
+}
+
+model xref_collection_scrap_center {
+  xref_id                BigInt                 @id @default(autoincrement())
+  org_id                 BigInt
+  scrap_type_id          BigInt
+  center_id              BigInt
+  amount                 Decimal                @db.Decimal(10, 2)
+  created_by             BigInt
+  created_at             DateTime               @default(now()) @db.Timestamptz(6)
+  centers                centers                @relation(fields: [center_id], references: [center_id], onDelete: NoAction, onUpdate: NoAction)
+  users                  users                  @relation(fields: [created_by], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  organisations          organisations          @relation(fields: [org_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  collection_scrap_types collection_scrap_types @relation(fields: [scrap_type_id], references: [scrap_type_id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@unique([scrap_type_id, center_id], map: "uniq_scraptype_center")
+}
+
+model xref_collection_trans_doc {
+  xref_id             BigInt            @id @default(autoincrement())
+  org_id              BigInt
+  collection_trans_id BigInt?
+  document_id         BigInt?
+  created_by          BigInt?
+  created_at          DateTime?         @default(now()) @db.Timestamptz(6)
+  collection_trans    collection_trans? @relation(fields: [collection_trans_id], references: [trans_id], onDelete: NoAction, onUpdate: NoAction)
+  users               users?            @relation(fields: [created_by], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  documents           documents?        @relation(fields: [document_id], references: [document_id], onDelete: NoAction, onUpdate: NoAction)
+  organisations       organisations     @relation(fields: [org_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@unique([collection_trans_id, document_id], map: "uq_collection_trans_doc")
+}
+
+model xref_installation_documents {
+  xref_id         BigInt        @id @default(autoincrement())
+  installation_id BigInt
+  document_id     BigInt
+  created_at      DateTime?     @default(now()) @db.Timestamp(6)
+  created_by      BigInt?
+  users           users?        @relation(fields: [created_by], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  documents       documents     @relation(fields: [document_id], references: [document_id], onDelete: NoAction, onUpdate: NoAction)
+  installations   installations @relation(fields: [installation_id], references: [installation_id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@unique([installation_id, document_id], map: "idx_unique_installation_document")
+}
+
+model xref_installation_product {
+  xref_id                                                                          BigInt          @id @default(autoincrement())
+  installation_id                                                                  BigInt
+  prod_id                                                                          BigInt?
+  prod_serial                                                                      String?         @unique(map: "idx_unique_prod_serial") @db.VarChar(100)
+  updated_at                                                                       DateTime?       @default(now()) @db.Timestamp(6)
+  updated_by                                                                       BigInt?
+  prod_type_id                                                                     BigInt?
+  inv_batteries_inv_batteries_serv_xref_install_prod_idToxref_installation_product inv_batteries?  @relation("inv_batteries_serv_xref_install_prod_idToxref_installation_product")
+  inv_batteries_inv_batteries_xref_install_prod_idToxref_installation_product      inv_batteries?  @relation("inv_batteries_xref_install_prod_idToxref_installation_product")
+  inv_chargers_inv_chargers_serv_xref_install_prod_idToxref_installation_product   inv_chargers?   @relation("inv_chargers_serv_xref_install_prod_idToxref_installation_product")
+  inv_chargers_inv_chargers_xref_install_prod_idToxref_installation_product        inv_chargers[]  @relation("inv_chargers_xref_install_prod_idToxref_installation_product")
+  inv_iots                                                                         inv_iots?
+  installations                                                                    installations   @relation(fields: [installation_id], references: [installation_id], onDelete: NoAction, onUpdate: NoAction)
+  product_master                                                                   product_master? @relation(fields: [prod_id], references: [prod_id], onDelete: NoAction, onUpdate: NoAction)
+  product_types                                                                    product_types?  @relation(fields: [prod_type_id], references: [prod_type_id], onDelete: NoAction, onUpdate: NoAction)
+  users                                                                            users?          @relation(fields: [updated_by], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@unique([installation_id, prod_id], map: "idx_unique_installation_product")
+}
+
+model xref_loan_documents {
+  xref_id           BigInt            @id @default(autoincrement())
+  application_id    BigInt
+  document_id       BigInt            @unique
+  created_at        DateTime?         @default(now()) @db.Timestamp(6)
+  created_by        BigInt?
+  doc_type_id       BigInt?
+  loan_applications loan_applications @relation(fields: [application_id], references: [application_id], onDelete: NoAction, onUpdate: NoAction)
+  documents         documents         @relation(fields: [document_id], references: [document_id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model xref_prodpkg_prodtype {
+  xref_id          BigInt           @id @default(autoincrement())
+  prod_pkg_id      BigInt
+  prod_type_id     BigInt
+  created_at       DateTime?        @default(now()) @db.Timestamp(6)
+  created_by       BigInt?
+  users            users?           @relation(fields: [created_by], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_prodpkg_prottype_created_by")
+  product_packages product_packages @relation(fields: [prod_pkg_id], references: [prod_pkg_id], onDelete: NoAction, onUpdate: NoAction)
+  product_types    product_types    @relation(fields: [prod_type_id], references: [prod_type_id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@unique([prod_pkg_id, prod_type_id], map: "idx_unique_prod_pkg_type")
+}
+
+model xref_user_centers {
+  xref_id                                   BigInt        @id @default(autoincrement())
+  user_id                                   BigInt?
+  center_id                                 BigInt?
+  created_at                                DateTime?     @db.Timestamptz(6)
+  created_by                                BigInt?
+  org_id                                    BigInt
+  users_xref_user_centers_created_byTousers users?        @relation("xref_user_centers_created_byTousers", fields: [created_by], references: [id], map: "fk_xref_user_centers_creator")
+  organisations                             organisations @relation(fields: [org_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_xref_user_centers_org")
+  users_xref_user_centers_user_idTousers    users?        @relation("xref_user_centers_user_idTousers", fields: [user_id], references: [id], map: "fk_xref_user_centers_user")
+
+  @@unique([user_id, center_id], map: "idx_user_center")
+  @@unique([user_id, center_id], map: "unique_xusercenters_user_center")
+  @@index([created_by], map: "idx_xref_user_centers_created_by")
+}
+
+/// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by Prisma Client.
+model zz_documents_20251214 {
+  document_id        BigInt?
+  application_id     BigInt?
+  customer_id        BigInt?
+  doc_type_id        BigInt?
+  document_url       String?
+  is_verified        Boolean?
+  verified_by        BigInt?
+  verified_at        DateTime? @db.Timestamptz(6)
+  uploaded_by        BigInt?
+  uploaded_at        DateTime? @db.Timestamptz(6)
+  geo_location_lat   Decimal?  @db.Decimal
+  geo_location_lng   Decimal?  @db.Decimal
+  status             String?
+  rejection_reason   String?
+  is_related_parties Boolean?
+  related_parties_id BigInt?
+
+  @@ignore
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model batch_qc_checks {
+  qc_id          BigInt         @id @default(autoincrement())
+  org_id         BigInt
+  batch_cd       String         @db.VarChar(100)
+  priority       String
+  is_active      Boolean        @default(true)
+  qc_desc        String
+  qc_sql         String
+  expected_count BigInt
+  created_at     DateTime?      @default(now()) @db.Timestamptz(6)
+  created_by     BigInt?
+  batch_qcs      batch_qcs      @relation(fields: [batch_cd], references: [batch_qc_cd], onDelete: NoAction, onUpdate: NoAction, map: "fk_batch_qc_checks_batch_cd")
+  organisations  organisations  @relation(fields: [org_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_batch_qcs_org")
+  users          users?         @relation(fields: [created_by], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_batch_qcs_user")
+  batch_qc_logs  batch_qc_logs?
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model batch_qc_logs {
+  qc_id           BigInt          @id
+  batch_cd        String          @db.VarChar(100)
+  status          String
+  message         String?
+  created_by      BigInt?         @default(1)
+  start_at        DateTime        @db.Timestamptz(6)
+  end_at          DateTime        @db.Timestamptz(6)
+  batch_qcs       batch_qcs       @relation(fields: [batch_cd], references: [batch_qc_cd], onDelete: NoAction, onUpdate: NoAction, map: "fk_batch_qc_logs_batch_cd")
+  batch_qc_checks batch_qc_checks @relation(fields: [qc_id], references: [qc_id], onDelete: NoAction, onUpdate: NoAction, map: "fk_batch_qc_logs_qc_id")
+}
+
+model batch_qcs {
+  batch_qc_cd     String            @id @db.VarChar(100)
+  batch_qc_name   String            @db.VarChar(100)
+  exec_order      BigInt
+  email           String            @db.VarChar(100)
+  is_enabled      Boolean
+  batch_qc_checks batch_qc_checks[]
+  batch_qc_logs   batch_qc_logs[]
+}
+
+model custom_alert_request_models {
+  request_id      String    @id @db.VarChar(255)
+  vehicle_no      String    @db.VarChar(100)
+  alert_type      String    @db.VarChar(100)
+  start_timestamp BigInt
+  end_timestamp   BigInt?
+  object_url      String?
+  status          String    @db.VarChar(50)
+  error_msg       String?
+  created_at      DateTime? @db.Timestamptz(6)
+  updated_at      DateTime? @db.Timestamptz(6)
+
+  @@index([end_timestamp], map: "idx_custom_alert_request_models_end_timestamp")
+  @@index([start_timestamp], map: "idx_custom_alert_request_models_start_timestamp")
+}
+
+model custom_device_alerts {
+  id            BigInt    @id @default(autoincrement())
+  vehicle_no    String?
+  latitude      Decimal?  @db.Decimal
+  longitude     Decimal?  @db.Decimal
+  speed         Decimal?  @db.Decimal
+  distance      Decimal?  @db.Decimal
+  gps_timestamp DateTime? @db.Timestamptz(6)
+  device_alert  String?
+  created_at    DateTime? @db.Timestamptz(6)
+  updated_at    DateTime? @db.Timestamptz(6)
+}
+
+model device_alarms {
+  id            BigInt    @id @default(autoincrement())
+  vehicle_no    String?
+  latitude      Decimal?  @db.Decimal
+  longitude     Decimal?  @db.Decimal
+  speed         Decimal?  @db.Decimal
+  gps_timestamp DateTime? @db.Timestamptz(6)
+  device_alert  String?
+  created_at    DateTime? @db.Timestamptz(6)
+  updated_at    DateTime? @db.Timestamptz(6)
+}
+
+model zz_related_parties_20251214 {
+  related_party_id   BigInt    @id(map: "related_parties_pkey") @default(autoincrement())
+  application_id     BigInt?
+  name               String?
+  mobile             String?
+  pan_number         String?
+  aadhar_number      String?
+  address            Json?
+  permanent_address  Json?
+  other_address      Json?
+  is_house_owned     Boolean?
+  num_years_residing Decimal?  @db.Decimal
+  relation_type      String?
+  relationship       String?
+  cibil_score        BigInt?
+  crif_score         BigInt?
+  experian_score     BigInt?
+  equifax_score      BigInt?
+  created_at         DateTime? @db.Timestamptz(6)
+  updated_at         DateTime? @db.Timestamptz(6)
+  otp                String?   @db.VarChar(10)
+  is_verified        Boolean?  @default(false)
+
+  @@index([application_id], map: "idx_related_parties_application_id")
+}
+
+model zz_xref_f_idocuments_20241214 {
+  xref_id        BigInt     @id(map: "xref_f_idocuments_pkey") @default(autoincrement())
+  customer_id    BigInt?
+  application_id BigInt?
+  inspection_id  BigInt?
+  document_id    BigInt?
+  created_at     DateTime?  @default(now()) @db.Timestamptz(6)
+  customers      customers? @relation(fields: [customer_id], references: [customer_id], onDelete: NoAction, onUpdate: NoAction, map: "fk_customers_xref_f_idocument")
+
+  @@unique([application_id, document_id], map: "unique_xfidocs_app_doc")
+  @@index([application_id], map: "idx_xref_f_idocuments_application_id")
+  @@index([customer_id], map: "idx_xref_f_idocuments_customer_id")
+  @@index([document_id], map: "idx_xref_f_idocuments_document_id")
+  @@index([inspection_id], map: "idx_xref_f_idocuments_inspection_id")
+}
+
+enum ChequeType {
+  B_CHEQUE
+  G_CHEQUE
+  CB_CHEQUE
+  NA_HOUSEOWNER
+}
+
+enum InvBatteryStatus {
+  INACTIVE
+  ACTIVE
+  FAULT
+  DISPOSED
+  IN_TRANSIT @map("IN-TRANSIT")
+}
+
+enum InvType {
+  TEST
+  SERVICE
+  SALE
+}
+
+enum asset_type_enum {
+  IOT
+  CHARGER
+  BATTERY
+  SIM
+}
+
+enum upload_type_enum {
+  BULK_IMPORT     @map("BULK IMPORT")
+  STATUS_UPDATE   @map("STATUS UPDATE")
+  LOCATION_UPDATE @map("LOCATION UPDATE")
+  IOT_SIM_LINKING @map("IOT-SIM LINKING")
+  KYC_UPDATE      @map("KYC UPDATE")
+}

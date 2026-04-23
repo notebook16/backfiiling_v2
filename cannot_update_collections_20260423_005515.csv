@@ -1,0 +1,775 @@
+collection_id,loan_id,application_no,reason,reason desc
+2494,2706,HEV-UPW-5,combine_close_type_blocked,Loan skipped because COMBINE CLOSE_TYPE is Recovered/Closed/Return.
+2495,2706,HEV-UPW-5,combine_close_type_blocked,Loan skipped because COMBINE CLOSE_TYPE is Recovered/Closed/Return.
+2496,2706,HEV-UPW-5,combine_close_type_blocked,Loan skipped because COMBINE CLOSE_TYPE is Recovered/Closed/Return.
+2506,1394,HEV-UPW-6,amount_mismatch_exact_required,Exact match mode enabled; COMBINE Total Amount != due_amount.
+2507,1394,HEV-UPW-6,amount_mismatch_exact_required,Exact match mode enabled; COMBINE Total Amount != due_amount.
+2604,1643,HEV-UPW-13,combine_paid_on_missing_or_invalid,"COMBINE Paid On for this EMI is blank/invalid, so not eligible."
+2664,1677,HEV-UPW-17,combine_paid_on_missing_or_invalid,"COMBINE Paid On for this EMI is blank/invalid, so not eligible."
+2688,1715,HEV-UPW-19,combine_paid_on_missing_or_invalid,"COMBINE Paid On for this EMI is blank/invalid, so not eligible."
+2700,1729,HEV-UPW-20,combine_paid_on_missing_or_invalid,"COMBINE Paid On for this EMI is blank/invalid, so not eligible."
+3071,2266,HEV-UPW-46,combine_paid_on_missing_or_invalid,"COMBINE Paid On for this EMI is blank/invalid, so not eligible."
+3931,3308,HEV-UPW-105,amount_mismatch_exact_required,Exact match mode enabled; COMBINE Total Amount != due_amount.
+3932,3308,HEV-UPW-105,combine_paid_on_missing_or_invalid,"COMBINE Paid On for this EMI is blank/invalid, so not eligible."
+4079,3372,HEV-UPW-115,combine_paid_on_missing_or_invalid,"COMBINE Paid On for this EMI is blank/invalid, so not eligible."
+4109,3374,HEV-UPW-118,combine_paid_on_missing_or_invalid,"COMBINE Paid On for this EMI is blank/invalid, so not eligible."
+4169,3364,HEV-UPW-122,combine_paid_on_missing_or_invalid,"COMBINE Paid On for this EMI is blank/invalid, so not eligible."
+4199,3438,HEV-UPW-124,combine_paid_on_missing_or_invalid,"COMBINE Paid On for this EMI is blank/invalid, so not eligible."
+4217,3008,HEV-UPW-125,combine_paid_on_missing_or_invalid,"COMBINE Paid On for this EMI is blank/invalid, so not eligible."
+4514,2516,HEV-RJ-1,combine_paid_on_missing_or_invalid,"COMBINE Paid On for this EMI is blank/invalid, so not eligible."
+4634,2521,HEV-RJ-8,combine_close_type_blocked,Loan skipped because COMBINE CLOSE_TYPE is Recovered/Closed/Return.
+4635,2521,HEV-RJ-8,combine_close_type_blocked,Loan skipped because COMBINE CLOSE_TYPE is Recovered/Closed/Return.
+4636,2521,HEV-RJ-8,combine_close_type_blocked,Loan skipped because COMBINE CLOSE_TYPE is Recovered/Closed/Return.
+4671,2523,HEV-RJ-10,combine_close_type_blocked,Loan skipped because COMBINE CLOSE_TYPE is Recovered/Closed/Return.
+4672,2523,HEV-RJ-10,combine_close_type_blocked,Loan skipped because COMBINE CLOSE_TYPE is Recovered/Closed/Return.
+5143,2552,HEV-RJ-44,combine_close_type_blocked,Loan skipped because COMBINE CLOSE_TYPE is Recovered/Closed/Return.
+5144,2552,HEV-RJ-44,combine_close_type_blocked,Loan skipped because COMBINE CLOSE_TYPE is Recovered/Closed/Return.
+5145,2552,HEV-RJ-44,combine_close_type_blocked,Loan skipped because COMBINE CLOSE_TYPE is Recovered/Closed/Return.
+5187,2556,HEV-RJ-48,combine_paid_on_missing_or_invalid,"COMBINE Paid On for this EMI is blank/invalid, so not eligible."
+5205,2557,HEV-RJ-49,combine_paid_on_missing_or_invalid,"COMBINE Paid On for this EMI is blank/invalid, so not eligible."
+5313,2560,HEV-RJ-55,combine_paid_on_missing_or_invalid,"COMBINE Paid On for this EMI is blank/invalid, so not eligible."
+5331,2561,HEV-RJ-56,combine_paid_on_missing_or_invalid,"COMBINE Paid On for this EMI is blank/invalid, so not eligible."
+5439,36,HEV-RJ-65,combine_paid_on_missing_or_invalid,"COMBINE Paid On for this EMI is blank/invalid, so not eligible."
+5440,36,HEV-RJ-65,combine_paid_on_missing_or_invalid,"COMBINE Paid On for this EMI is blank/invalid, so not eligible."
+5441,36,HEV-RJ-65,combine_paid_on_missing_or_invalid,"COMBINE Paid On for this EMI is blank/invalid, so not eligible."
+5668,163,HEV-RJ-84,amount_mismatch_exact_required,Exact match mode enabled; COMBINE Total Amount != due_amount.
+5669,163,HEV-RJ-84,amount_mismatch_exact_required,Exact match mode enabled; COMBINE Total Amount != due_amount.
+5670,163,HEV-RJ-84,amount_mismatch_exact_required,Exact match mode enabled; COMBINE Total Amount != due_amount.
+5688,2577,HEV-RJ-85,combine_paid_on_missing_or_invalid,"COMBINE Paid On for this EMI is blank/invalid, so not eligible."
+5775,2581,HEV-RJ-95,combine_paid_on_missing_or_invalid,"COMBINE Paid On for this EMI is blank/invalid, so not eligible."
+5793,174,HEV-RJ-96,combine_paid_on_missing_or_invalid,"COMBINE Paid On for this EMI is blank/invalid, so not eligible."
+5811,2582,HEV-RJ-97,combine_paid_on_missing_or_invalid,"COMBINE Paid On for this EMI is blank/invalid, so not eligible."
+5900,424,HEV-RJ-106,combine_paid_on_missing_or_invalid,"COMBINE Paid On for this EMI is blank/invalid, so not eligible."
+5912,247,HEV-RJ-107,combine_paid_on_missing_or_invalid,"COMBINE Paid On for this EMI is blank/invalid, so not eligible."
+6001,423,HEV-RJ-114,amount_mismatch_exact_required,Exact match mode enabled; COMBINE Total Amount != due_amount.
+6322,519,HEV-RJ-135,combine_paid_on_missing_or_invalid,"COMBINE Paid On for this EMI is blank/invalid, so not eligible."
+6577,505,HEV-RJ-155,amount_mismatch_exact_required,Exact match mode enabled; COMBINE Total Amount != due_amount.
+6866,678,HEV-RJ-177,combine_paid_on_missing_or_invalid,"COMBINE Paid On for this EMI is blank/invalid, so not eligible."
+6867,678,HEV-RJ-177,combine_paid_on_missing_or_invalid,"COMBINE Paid On for this EMI is blank/invalid, so not eligible."
+6868,678,HEV-RJ-177,combine_paid_on_missing_or_invalid,"COMBINE Paid On for this EMI is blank/invalid, so not eligible."
+7096,783,HEV-RJ-194,combine_paid_on_missing_or_invalid,"COMBINE Paid On for this EMI is blank/invalid, so not eligible."
+7108,812,HEV-RJ-196,combine_paid_on_missing_or_invalid,"COMBINE Paid On for this EMI is blank/invalid, so not eligible."
+7692,1209,HEV-RJ-247,combine_paid_on_missing_or_invalid,"COMBINE Paid On for this EMI is blank/invalid, so not eligible."
+7716,1212,HEV-RJ-249,combine_paid_on_missing_or_invalid,"COMBINE Paid On for this EMI is blank/invalid, so not eligible."
+7743,1223,HEV-RJ-251,combine_close_type_blocked,Loan skipped because COMBINE CLOSE_TYPE is Recovered/Closed/Return.
+7744,1223,HEV-RJ-251,combine_close_type_blocked,Loan skipped because COMBINE CLOSE_TYPE is Recovered/Closed/Return.
+7745,1223,HEV-RJ-251,combine_close_type_blocked,Loan skipped because COMBINE CLOSE_TYPE is Recovered/Closed/Return.
+7746,1223,HEV-RJ-251,combine_close_type_blocked,Loan skipped because COMBINE CLOSE_TYPE is Recovered/Closed/Return.
+7776,1238,HEV-RJ-254,combine_paid_on_missing_or_invalid,"COMBINE Paid On for this EMI is blank/invalid, so not eligible."
+7794,1267,HEV-RJ-255,combine_paid_on_missing_or_invalid,"COMBINE Paid On for this EMI is blank/invalid, so not eligible."
+7806,1258,HEV-RJ-256,combine_paid_on_missing_or_invalid,"COMBINE Paid On for this EMI is blank/invalid, so not eligible."
+8353,1663,HEV-RJ-299,combine_paid_on_missing_or_invalid,"COMBINE Paid On for this EMI is blank/invalid, so not eligible."
+8379,1694,HEV-RJ-302,amount_mismatch_exact_required,Exact match mode enabled; COMBINE Total Amount != due_amount.
+8380,1694,HEV-RJ-302,combine_paid_on_missing_or_invalid,"COMBINE Paid On for this EMI is blank/invalid, so not eligible."
+8638,1889,HEV-RJ-322,combine_close_type_blocked,Loan skipped because COMBINE CLOSE_TYPE is Recovered/Closed/Return.
+8950,2752,HEV-RJ-360,combine_paid_on_missing_or_invalid,"COMBINE Paid On for this EMI is blank/invalid, so not eligible."
+8951,2752,HEV-RJ-360,combine_paid_on_missing_or_invalid,"COMBINE Paid On for this EMI is blank/invalid, so not eligible."
+8990,2749,HEV-RJ-363,combine_paid_on_missing_or_invalid,"COMBINE Paid On for this EMI is blank/invalid, so not eligible."
+9002,2782,HEV-RJ-364,combine_paid_on_missing_or_invalid,"COMBINE Paid On for this EMI is blank/invalid, so not eligible."
+9207,2298,HEV-000001,combine_paid_on_missing_or_invalid,"COMBINE Paid On for this EMI is blank/invalid, so not eligible."
+9494,2314,HEV-000023,combine_paid_on_missing_or_invalid,"COMBINE Paid On for this EMI is blank/invalid, so not eligible."
+9829,2335,HEV-000054,combine_paid_on_missing_or_invalid,"COMBINE Paid On for this EMI is blank/invalid, so not eligible."
+9864,2337,HEV-000058,combine_paid_on_missing_or_invalid,"COMBINE Paid On for this EMI is blank/invalid, so not eligible."
+9931,2343,HEV-000066,combine_paid_on_missing_or_invalid,"COMBINE Paid On for this EMI is blank/invalid, so not eligible."
+10088,2352,HEV-000077,amount_mismatch_exact_required,Exact match mode enabled; COMBINE Total Amount != due_amount.
+10089,2352,HEV-000077,amount_mismatch_exact_required,Exact match mode enabled; COMBINE Total Amount != due_amount.
+10219,2358,HEV-000085,combine_paid_on_missing_or_invalid,"COMBINE Paid On for this EMI is blank/invalid, so not eligible."
+10257,2360,HEV-000087,combine_paid_on_missing_or_invalid,"COMBINE Paid On for this EMI is blank/invalid, so not eligible."
+10404,2368,HEV-000096,combine_close_type_blocked,Loan skipped because COMBINE CLOSE_TYPE is Recovered/Closed/Return.
+10405,2368,HEV-000096,combine_close_type_blocked,Loan skipped because COMBINE CLOSE_TYPE is Recovered/Closed/Return.
+10406,2368,HEV-000096,combine_close_type_blocked,Loan skipped because COMBINE CLOSE_TYPE is Recovered/Closed/Return.
+10407,2368,HEV-000096,combine_close_type_blocked,Loan skipped because COMBINE CLOSE_TYPE is Recovered/Closed/Return.
+10641,2382,HEV-000115,combine_paid_on_missing_or_invalid,"COMBINE Paid On for this EMI is blank/invalid, so not eligible."
+10683,2384,HEV-000118,combine_paid_on_missing_or_invalid,"COMBINE Paid On for this EMI is blank/invalid, so not eligible."
+10821,2390,HEV-000129,combine_paid_on_missing_or_invalid,"COMBINE Paid On for this EMI is blank/invalid, so not eligible."
+10822,2390,HEV-000129,combine_paid_on_missing_or_invalid,"COMBINE Paid On for this EMI is blank/invalid, so not eligible."
+11187,2411,HEV-000153,combine_paid_on_missing_or_invalid,"COMBINE Paid On for this EMI is blank/invalid, so not eligible."
+11188,2411,HEV-000153,combine_paid_on_missing_or_invalid,"COMBINE Paid On for this EMI is blank/invalid, so not eligible."
+11800,2444,HEV-000191,combine_paid_on_missing_or_invalid,"COMBINE Paid On for this EMI is blank/invalid, so not eligible."
+12342,12,HEV-000229,combine_paid_on_missing_or_invalid,"COMBINE Paid On for this EMI is blank/invalid, so not eligible."
+12403,2716,HEV-000235,amount_mismatch_exact_required,Exact match mode enabled; COMBINE Total Amount != due_amount.
+12465,2471,HEV-000240,combine_paid_on_missing_or_invalid,"COMBINE Paid On for this EMI is blank/invalid, so not eligible."
+12498,26,HEV-000243,combine_paid_on_missing_or_invalid,"COMBINE Paid On for this EMI is blank/invalid, so not eligible."
+12587,134,HEV-000250,combine_paid_on_missing_or_invalid,"COMBINE Paid On for this EMI is blank/invalid, so not eligible."
+12665,2482,HEV-000256,combine_paid_on_missing_or_invalid,"COMBINE Paid On for this EMI is blank/invalid, so not eligible."
+13258,141,HEV-000301,combine_paid_on_missing_or_invalid,"COMBINE Paid On for this EMI is blank/invalid, so not eligible."
+13348,2498,HEV-000307,combine_paid_on_missing_or_invalid,"COMBINE Paid On for this EMI is blank/invalid, so not eligible."
+13588,339,HEV-000321,combine_paid_on_missing_or_invalid,"COMBINE Paid On for this EMI is blank/invalid, so not eligible."
+13606,492,HEV-000322,combine_paid_on_missing_or_invalid,"COMBINE Paid On for this EMI is blank/invalid, so not eligible."
+13618,457,HEV-000323,combine_paid_on_missing_or_invalid,"COMBINE Paid On for this EMI is blank/invalid, so not eligible."
+14008,342,HEV-000351,combine_close_type_blocked,Loan skipped because COMBINE CLOSE_TYPE is Recovered/Closed/Return.
+14009,342,HEV-000351,combine_close_type_blocked,Loan skipped because COMBINE CLOSE_TYPE is Recovered/Closed/Return.
+14010,342,HEV-000351,combine_close_type_blocked,Loan skipped because COMBINE CLOSE_TYPE is Recovered/Closed/Return.
+14322,409,HEV-000373,amount_mismatch_exact_required,Exact match mode enabled; COMBINE Total Amount != due_amount.
+14396,493,HEV-000378,combine_paid_on_missing_or_invalid,"COMBINE Paid On for this EMI is blank/invalid, so not eligible."
+14426,532,HEV-000380,combine_paid_on_missing_or_invalid,"COMBINE Paid On for this EMI is blank/invalid, so not eligible."
+14480,72,HEV-000383,combine_paid_on_missing_or_invalid,"COMBINE Paid On for this EMI is blank/invalid, so not eligible."
+14504,484,HEV-000385,combine_paid_on_missing_or_invalid,"COMBINE Paid On for this EMI is blank/invalid, so not eligible."
+14640,544,HEV-000394,combine_close_type_blocked,Loan skipped because COMBINE CLOSE_TYPE is Recovered/Closed/Return.
+14641,544,HEV-000394,combine_close_type_blocked,Loan skipped because COMBINE CLOSE_TYPE is Recovered/Closed/Return.
+15389,719,HEV-000447,combine_paid_on_missing_or_invalid,"COMBINE Paid On for this EMI is blank/invalid, so not eligible."
+15437,717,HEV-000451,combine_paid_on_missing_or_invalid,"COMBINE Paid On for this EMI is blank/invalid, so not eligible."
+15467,734,HEV-000453,combine_paid_on_missing_or_invalid,"COMBINE Paid On for this EMI is blank/invalid, so not eligible."
+15521,761,HEV-000457,combine_paid_on_missing_or_invalid,"COMBINE Paid On for this EMI is blank/invalid, so not eligible."
+15533,764,HEV-000458,combine_paid_on_missing_or_invalid,"COMBINE Paid On for this EMI is blank/invalid, so not eligible."
+15587,779,HEV-000461,combine_paid_on_missing_or_invalid,"COMBINE Paid On for this EMI is blank/invalid, so not eligible."
+15743,835,HEV-000472,combine_paid_on_missing_or_invalid,"COMBINE Paid On for this EMI is blank/invalid, so not eligible."
+15761,838,HEV-000473,combine_paid_on_missing_or_invalid,"COMBINE Paid On for this EMI is blank/invalid, so not eligible."
+15797,844,HEV-000475,combine_paid_on_missing_or_invalid,"COMBINE Paid On for this EMI is blank/invalid, so not eligible."
+15815,2511,HEV-000476,combine_paid_on_missing_or_invalid,"COMBINE Paid On for this EMI is blank/invalid, so not eligible."
+15863,843,HEV-000480,combine_paid_on_missing_or_invalid,"COMBINE Paid On for this EMI is blank/invalid, so not eligible."
+16106,915,HEV-000498,combine_paid_on_missing_or_invalid,"COMBINE Paid On for this EMI is blank/invalid, so not eligible."
+16107,915,HEV-000498,combine_paid_on_missing_or_invalid,"COMBINE Paid On for this EMI is blank/invalid, so not eligible."
+16108,915,HEV-000498,combine_paid_on_missing_or_invalid,"COMBINE Paid On for this EMI is blank/invalid, so not eligible."
+16109,915,HEV-000498,combine_paid_on_missing_or_invalid,"COMBINE Paid On for this EMI is blank/invalid, so not eligible."
+16175,941,HEV-000502,amount_mismatch_exact_required,Exact match mode enabled; COMBINE Total Amount != due_amount.
+16420,1028,HEV-000518,combine_close_type_blocked,Loan skipped because COMBINE CLOSE_TYPE is Recovered/Closed/Return.
+16421,1028,HEV-000518,combine_close_type_blocked,Loan skipped because COMBINE CLOSE_TYPE is Recovered/Closed/Return.
+16526,1058,HEV-000528,amount_mismatch_exact_required,Exact match mode enabled; COMBINE Total Amount != due_amount.
+16694,1139,HEV-000543,combine_paid_on_missing_or_invalid,"COMBINE Paid On for this EMI is blank/invalid, so not eligible."
+16824,1182,HEV-000553,combine_paid_on_missing_or_invalid,"COMBINE Paid On for this EMI is blank/invalid, so not eligible."
+16890,1216,HEV-000557,combine_paid_on_missing_or_invalid,"COMBINE Paid On for this EMI is blank/invalid, so not eligible."
+16905,1218,HEV-000558,combine_close_type_blocked,Loan skipped because COMBINE CLOSE_TYPE is Recovered/Closed/Return.
+16906,1218,HEV-000558,combine_close_type_blocked,Loan skipped because COMBINE CLOSE_TYPE is Recovered/Closed/Return.
+16907,1218,HEV-000558,combine_close_type_blocked,Loan skipped because COMBINE CLOSE_TYPE is Recovered/Closed/Return.
+16908,1218,HEV-000558,combine_close_type_blocked,Loan skipped because COMBINE CLOSE_TYPE is Recovered/Closed/Return.
+16974,1224,HEV-000564,combine_paid_on_missing_or_invalid,"COMBINE Paid On for this EMI is blank/invalid, so not eligible."
+17037,1235,HEV-000568,combine_paid_on_missing_or_invalid,"COMBINE Paid On for this EMI is blank/invalid, so not eligible."
+17145,1255,HEV-000575,combine_paid_on_missing_or_invalid,"COMBINE Paid On for this EMI is blank/invalid, so not eligible."
+17157,1264,HEV-000576,combine_paid_on_missing_or_invalid,"COMBINE Paid On for this EMI is blank/invalid, so not eligible."
+17162,1208,HEV-000577,combine_paid_on_missing_or_invalid,"COMBINE Paid On for this EMI is blank/invalid, so not eligible."
+17163,1208,HEV-000577,combine_paid_on_missing_or_invalid,"COMBINE Paid On for this EMI is blank/invalid, so not eligible."
+17175,1257,HEV-000578,combine_paid_on_missing_or_invalid,"COMBINE Paid On for this EMI is blank/invalid, so not eligible."
+17365,1322,HEV-000595,amount_mismatch_exact_required,Exact match mode enabled; COMBINE Total Amount != due_amount.
+17518,961,HEV-000607,combine_paid_on_missing_or_invalid,"COMBINE Paid On for this EMI is blank/invalid, so not eligible."
+18070,1484,HEV-000647,combine_close_type_blocked,Loan skipped because COMBINE CLOSE_TYPE is Recovered/Closed/Return.
+18071,1484,HEV-000647,combine_close_type_blocked,Loan skipped because COMBINE CLOSE_TYPE is Recovered/Closed/Return.
+18128,1489,HEV-000653,combine_paid_on_missing_or_invalid,"COMBINE Paid On for this EMI is blank/invalid, so not eligible."
+18192,2514,HEV-000660,combine_close_type_blocked,Loan skipped because COMBINE CLOSE_TYPE is Recovered/Closed/Return.
+18193,2514,HEV-000660,combine_close_type_blocked,Loan skipped because COMBINE CLOSE_TYPE is Recovered/Closed/Return.
+18194,2514,HEV-000660,combine_close_type_blocked,Loan skipped because COMBINE CLOSE_TYPE is Recovered/Closed/Return.
+18599,1641,HEV-000690,combine_paid_on_missing_or_invalid,"COMBINE Paid On for this EMI is blank/invalid, so not eligible."
+18685,1659,HEV-000695,combine_close_type_blocked,Loan skipped because COMBINE CLOSE_TYPE is Recovered/Closed/Return.
+18686,1659,HEV-000695,combine_close_type_blocked,Loan skipped because COMBINE CLOSE_TYPE is Recovered/Closed/Return.
+18726,1668,HEV-000700,combine_paid_on_missing_or_invalid,"COMBINE Paid On for this EMI is blank/invalid, so not eligible."
+18840,1702,HEV-000707,combine_paid_on_missing_or_invalid,"COMBINE Paid On for this EMI is blank/invalid, so not eligible."
+18876,1724,HEV-000710,combine_paid_on_missing_or_invalid,"COMBINE Paid On for this EMI is blank/invalid, so not eligible."
+18900,1681,HEV-000712,combine_paid_on_missing_or_invalid,"COMBINE Paid On for this EMI is blank/invalid, so not eligible."
+18912,1730,HEV-000713,combine_paid_on_missing_or_invalid,"COMBINE Paid On for this EMI is blank/invalid, so not eligible."
+18924,1728,HEV-000714,combine_paid_on_missing_or_invalid,"COMBINE Paid On for this EMI is blank/invalid, so not eligible."
+19252,1863,HEV-000741,amount_mismatch_exact_required,Exact match mode enabled; COMBINE Total Amount != due_amount.
+19666,2014,HEV-000775,combine_paid_on_missing_or_invalid,"COMBINE Paid On for this EMI is blank/invalid, so not eligible."
+20096,2748,HEV-000810,combine_paid_on_missing_or_invalid,"COMBINE Paid On for this EMI is blank/invalid, so not eligible."
+20656,3088,HEV-000854,combine_paid_on_missing_or_invalid,"COMBINE Paid On for this EMI is blank/invalid, so not eligible."
+21042,2177,HEV-000883,amount_mismatch_exact_required,Exact match mode enabled; COMBINE Total Amount != due_amount.
+21088,2204,HEV-000886,combine_paid_on_missing_or_invalid,"COMBINE Paid On for this EMI is blank/invalid, so not eligible."
+21589,3210,HEV-000923,amount_mismatch_exact_required,Exact match mode enabled; COMBINE Total Amount != due_amount.
+21721,3257,HEV-000932,combine_paid_on_missing_or_invalid,"COMBINE Paid On for this EMI is blank/invalid, so not eligible."
+21877,3318,HEV-000945,combine_paid_on_missing_or_invalid,"COMBINE Paid On for this EMI is blank/invalid, so not eligible."
+21937,3360,HEV-000950,combine_paid_on_missing_or_invalid,"COMBINE Paid On for this EMI is blank/invalid, so not eligible."
+21979,3354,HEV-000955,combine_paid_on_missing_or_invalid,"COMBINE Paid On for this EMI is blank/invalid, so not eligible."
+22123,3404,HEV-000965,combine_paid_on_missing_or_invalid,"COMBINE Paid On for this EMI is blank/invalid, so not eligible."
+22141,3416,HEV-000966,combine_paid_on_missing_or_invalid,"COMBINE Paid On for this EMI is blank/invalid, so not eligible."
+22241,3450,HEV-000975,combine_paid_on_missing_or_invalid,"COMBINE Paid On for this EMI is blank/invalid, so not eligible."
+22283,3455,HEV-000978,combine_paid_on_missing_or_invalid,"COMBINE Paid On for this EMI is blank/invalid, so not eligible."
+22510,3596,HEV-Litfin-20,combine_paid_on_missing_or_invalid,"COMBINE Paid On for this EMI is blank/invalid, so not eligible."
+22936,2618,HEV-UP-22,combine_paid_on_missing_or_invalid,"COMBINE Paid On for this EMI is blank/invalid, so not eligible."
+22972,2621,HEV-UP-25,combine_paid_on_missing_or_invalid,"COMBINE Paid On for this EMI is blank/invalid, so not eligible."
+23280,2644,HEV-UP-52,combine_close_type_blocked,Loan skipped because COMBINE CLOSE_TYPE is Recovered/Closed/Return.
+23281,2644,HEV-UP-52,combine_close_type_blocked,Loan skipped because COMBINE CLOSE_TYPE is Recovered/Closed/Return.
+23282,2644,HEV-UP-52,combine_close_type_blocked,Loan skipped because COMBINE CLOSE_TYPE is Recovered/Closed/Return.
+23283,2644,HEV-UP-52,combine_close_type_blocked,Loan skipped because COMBINE CLOSE_TYPE is Recovered/Closed/Return.
+23385,2649,HEV-UP-59,combine_paid_on_missing_or_invalid,"COMBINE Paid On for this EMI is blank/invalid, so not eligible."
+23457,2655,HEV-UP-66,combine_paid_on_missing_or_invalid,"COMBINE Paid On for this EMI is blank/invalid, so not eligible."
+23469,2656,HEV-UP-67,combine_paid_on_missing_or_invalid,"COMBINE Paid On for this EMI is blank/invalid, so not eligible."
+23481,2730,HEV-UP-68,combine_paid_on_missing_or_invalid,"COMBINE Paid On for this EMI is blank/invalid, so not eligible."
+23485,2657,HEV-UP-69,amount_mismatch_exact_required,Exact match mode enabled; COMBINE Total Amount != due_amount.
+23492,2657,HEV-UP-69,amount_mismatch_exact_required,Exact match mode enabled; COMBINE Total Amount != due_amount.
+23523,2659,HEV-UP-71,combine_paid_on_missing_or_invalid,"COMBINE Paid On for this EMI is blank/invalid, so not eligible."
+23552,2661,HEV-UP-73,amount_mismatch_exact_required,Exact match mode enabled; COMBINE Total Amount != due_amount.
+23553,2661,HEV-UP-73,combine_paid_on_missing_or_invalid,"COMBINE Paid On for this EMI is blank/invalid, so not eligible."
+23565,2662,HEV-UP-74,combine_paid_on_missing_or_invalid,"COMBINE Paid On for this EMI is blank/invalid, so not eligible."
+23594,2664,HEV-UP-77,combine_close_type_blocked,Loan skipped because COMBINE CLOSE_TYPE is Recovered/Closed/Return.
+23632,2666,HEV-UP-80,combine_paid_on_missing_or_invalid,"COMBINE Paid On for this EMI is blank/invalid, so not eligible."
+23633,2666,HEV-UP-80,combine_paid_on_missing_or_invalid,"COMBINE Paid On for this EMI is blank/invalid, so not eligible."
+23870,95,HEV-UP-99,combine_paid_on_missing_or_invalid,"COMBINE Paid On for this EMI is blank/invalid, so not eligible."
+24169,203,HEV-UP-125,combine_close_type_blocked,Loan skipped because COMBINE CLOSE_TYPE is Recovered/Closed/Return.
+24170,203,HEV-UP-125,combine_close_type_blocked,Loan skipped because COMBINE CLOSE_TYPE is Recovered/Closed/Return.
+24171,203,HEV-UP-125,combine_close_type_blocked,Loan skipped because COMBINE CLOSE_TYPE is Recovered/Closed/Return.
+24172,203,HEV-UP-125,combine_close_type_blocked,Loan skipped because COMBINE CLOSE_TYPE is Recovered/Closed/Return.
+24208,190,HEV-UP-127,combine_paid_on_missing_or_invalid,"COMBINE Paid On for this EMI is blank/invalid, so not eligible."
+24277,255,HEV-UP-132,combine_paid_on_missing_or_invalid,"COMBINE Paid On for this EMI is blank/invalid, so not eligible."
+24385,244,HEV-UP-142,combine_paid_on_missing_or_invalid,"COMBINE Paid On for this EMI is blank/invalid, so not eligible."
+24396,410,HEV-UP-144,combine_paid_on_missing_or_invalid,"COMBINE Paid On for this EMI is blank/invalid, so not eligible."
+24516,2677,HEV-UP-156,combine_close_type_blocked,Loan skipped because COMBINE CLOSE_TYPE is Recovered/Closed/Return.
+24706,2680,HEV-UP-171,combine_close_type_blocked,Loan skipped because COMBINE CLOSE_TYPE is Recovered/Closed/Return.
+24707,2680,HEV-UP-171,combine_close_type_blocked,Loan skipped because COMBINE CLOSE_TYPE is Recovered/Closed/Return.
+24708,2680,HEV-UP-171,combine_close_type_blocked,Loan skipped because COMBINE CLOSE_TYPE is Recovered/Closed/Return.
+24888,245,HEV-UP-184,amount_mismatch_exact_required,Exact match mode enabled; COMBINE Total Amount != due_amount.
+24985,2685,HEV-UP-191,combine_paid_on_missing_or_invalid,"COMBINE Paid On for this EMI is blank/invalid, so not eligible."
+25055,318,HEV-UP-196,combine_close_type_blocked,Loan skipped because COMBINE CLOSE_TYPE is Recovered/Closed/Return.
+25056,318,HEV-UP-196,combine_close_type_blocked,Loan skipped because COMBINE CLOSE_TYPE is Recovered/Closed/Return.
+25057,318,HEV-UP-196,combine_close_type_blocked,Loan skipped because COMBINE CLOSE_TYPE is Recovered/Closed/Return.
+25080,417,HEV-UP-198,combine_close_type_blocked,Loan skipped because COMBINE CLOSE_TYPE is Recovered/Closed/Return.
+25081,417,HEV-UP-198,combine_close_type_blocked,Loan skipped because COMBINE CLOSE_TYPE is Recovered/Closed/Return.
+25129,357,HEV-UP-203,combine_paid_on_missing_or_invalid,"COMBINE Paid On for this EMI is blank/invalid, so not eligible."
+25164,281,HEV-UP-206,combine_paid_on_missing_or_invalid,"COMBINE Paid On for this EMI is blank/invalid, so not eligible."
+25256,2686,HEV-UP-214,combine_paid_on_missing_or_invalid,"COMBINE Paid On for this EMI is blank/invalid, so not eligible."
+25271,278,HEV-UP-215,combine_paid_on_missing_or_invalid,"COMBINE Paid On for this EMI is blank/invalid, so not eligible."
+25307,452,HEV-UP-218,combine_paid_on_missing_or_invalid,"COMBINE Paid On for this EMI is blank/invalid, so not eligible."
+25830,665,HEV-UP-268,amount_mismatch_exact_required,Exact match mode enabled; COMBINE Total Amount != due_amount.
+26304,122,HEV-UP-305,combine_paid_on_missing_or_invalid,"COMBINE Paid On for this EMI is blank/invalid, so not eligible."
+26314,2732,HEV-UP-306,combine_close_type_blocked,Loan skipped because COMBINE CLOSE_TYPE is Recovered/Closed/Return.
+26315,2732,HEV-UP-306,combine_close_type_blocked,Loan skipped because COMBINE CLOSE_TYPE is Recovered/Closed/Return.
+26316,2732,HEV-UP-306,combine_close_type_blocked,Loan skipped because COMBINE CLOSE_TYPE is Recovered/Closed/Return.
+26355,2699,HEV-UP-310,combine_paid_on_missing_or_invalid,"COMBINE Paid On for this EMI is blank/invalid, so not eligible."
+26433,845,HEV-UP-315,combine_paid_on_missing_or_invalid,"COMBINE Paid On for this EMI is blank/invalid, so not eligible."
+26445,846,HEV-UP-316,combine_paid_on_missing_or_invalid,"COMBINE Paid On for this EMI is blank/invalid, so not eligible."
+26457,2700,HEV-UP-317,combine_paid_on_missing_or_invalid,"COMBINE Paid On for this EMI is blank/invalid, so not eligible."
+26475,856,HEV-UP-318,combine_paid_on_missing_or_invalid,"COMBINE Paid On for this EMI is blank/invalid, so not eligible."
+26544,884,HEV-UP-325,combine_close_type_blocked,Loan skipped because COMBINE CLOSE_TYPE is Recovered/Closed/Return.
+26545,884,HEV-UP-325,combine_close_type_blocked,Loan skipped because COMBINE CLOSE_TYPE is Recovered/Closed/Return.
+26546,884,HEV-UP-325,combine_close_type_blocked,Loan skipped because COMBINE CLOSE_TYPE is Recovered/Closed/Return.
+26821,955,HEV-UP-348,combine_paid_on_missing_or_invalid,"COMBINE Paid On for this EMI is blank/invalid, so not eligible."
+26822,955,HEV-UP-348,combine_paid_on_missing_or_invalid,"COMBINE Paid On for this EMI is blank/invalid, so not eligible."
+26823,955,HEV-UP-348,combine_paid_on_missing_or_invalid,"COMBINE Paid On for this EMI is blank/invalid, so not eligible."
+26824,955,HEV-UP-348,combine_paid_on_missing_or_invalid,"COMBINE Paid On for this EMI is blank/invalid, so not eligible."
+26825,955,HEV-UP-348,combine_paid_on_missing_or_invalid,"COMBINE Paid On for this EMI is blank/invalid, so not eligible."
+27264,1034,HEV-UP-383,amount_mismatch_exact_required,Exact match mode enabled; COMBINE Total Amount != due_amount.
+27265,1034,HEV-UP-383,amount_mismatch_exact_required,Exact match mode enabled; COMBINE Total Amount != due_amount.
+27266,1034,HEV-UP-383,amount_mismatch_exact_required,Exact match mode enabled; COMBINE Total Amount != due_amount.
+27267,1034,HEV-UP-383,amount_mismatch_exact_required,Exact match mode enabled; COMBINE Total Amount != due_amount.
+27268,1034,HEV-UP-383,amount_mismatch_exact_required,Exact match mode enabled; COMBINE Total Amount != due_amount.
+27730,1141,HEV-UP-422,combine_paid_on_missing_or_invalid,"COMBINE Paid On for this EMI is blank/invalid, so not eligible."
+27820,1252,HEV-UP-428,combine_paid_on_missing_or_invalid,"COMBINE Paid On for this EMI is blank/invalid, so not eligible."
+27981,1245,HEV-UP-440,amount_mismatch_exact_required,Exact match mode enabled; COMBINE Total Amount != due_amount.
+28076,1324,HEV-UP-448,amount_mismatch_exact_required,Exact match mode enabled; COMBINE Total Amount != due_amount.
+28596,1467,HEV-UP-487,amount_mismatch_exact_required,Exact match mode enabled; COMBINE Total Amount != due_amount.
+28597,1467,HEV-UP-487,amount_mismatch_exact_required,Exact match mode enabled; COMBINE Total Amount != due_amount.
+28678,1499,HEV-UP-494,amount_mismatch_exact_required,Exact match mode enabled; COMBINE Total Amount != due_amount.
+28880,1597,HEV-UP-511,amount_mismatch_exact_required,Exact match mode enabled; COMBINE Total Amount != due_amount.
+28921,1604,HEV-UP-514,combine_paid_on_missing_or_invalid,"COMBINE Paid On for this EMI is blank/invalid, so not eligible."
+29000,1602,HEV-UP-520,combine_close_type_blocked,Loan skipped because COMBINE CLOSE_TYPE is Recovered/Closed/Return.
+29001,1602,HEV-UP-520,combine_close_type_blocked,Loan skipped because COMBINE CLOSE_TYPE is Recovered/Closed/Return.
+29002,1602,HEV-UP-520,combine_close_type_blocked,Loan skipped because COMBINE CLOSE_TYPE is Recovered/Closed/Return.
+29135,1648,HEV-UP-530,combine_paid_on_missing_or_invalid,"COMBINE Paid On for this EMI is blank/invalid, so not eligible."
+29195,1673,HEV-UP-534,combine_paid_on_missing_or_invalid,"COMBINE Paid On for this EMI is blank/invalid, so not eligible."
+29231,1683,HEV-UP-538,combine_paid_on_missing_or_invalid,"COMBINE Paid On for this EMI is blank/invalid, so not eligible."
+29249,1672,HEV-UP-539,combine_paid_on_missing_or_invalid,"COMBINE Paid On for this EMI is blank/invalid, so not eligible."
+29270,1688,HEV-UP-541,combine_paid_on_missing_or_invalid,"COMBINE Paid On for this EMI is blank/invalid, so not eligible."
+29325,1508,HEV-UP-547,combine_paid_on_missing_or_invalid,"COMBINE Paid On for this EMI is blank/invalid, so not eligible."
+29352,1710,HEV-UP-549,combine_paid_on_missing_or_invalid,"COMBINE Paid On for this EMI is blank/invalid, so not eligible."
+29376,1706,HEV-UP-551,combine_paid_on_missing_or_invalid,"COMBINE Paid On for this EMI is blank/invalid, so not eligible."
+29430,1723,HEV-UP-556,combine_paid_on_missing_or_invalid,"COMBINE Paid On for this EMI is blank/invalid, so not eligible."
+29442,1739,HEV-UP-558,combine_paid_on_missing_or_invalid,"COMBINE Paid On for this EMI is blank/invalid, so not eligible."
+29457,1732,HEV-UP-559,amount_mismatch_exact_required,Exact match mode enabled; COMBINE Total Amount != due_amount.
+29460,1732,HEV-UP-559,combine_paid_on_missing_or_invalid,"COMBINE Paid On for this EMI is blank/invalid, so not eligible."
+29472,1743,HEV-UP-560,combine_paid_on_missing_or_invalid,"COMBINE Paid On for this EMI is blank/invalid, so not eligible."
+29490,1701,HEV-UP-561,combine_paid_on_missing_or_invalid,"COMBINE Paid On for this EMI is blank/invalid, so not eligible."
+29799,1813,HEV-UP-586,amount_mismatch_exact_required,Exact match mode enabled; COMBINE Total Amount != due_amount.
+29834,1810,HEV-UP-589,amount_mismatch_exact_required,Exact match mode enabled; COMBINE Total Amount != due_amount.
+30025,1881,HEV-UP-606,combine_paid_on_missing_or_invalid,"COMBINE Paid On for this EMI is blank/invalid, so not eligible."
+30230,1937,HEV-UP-624,amount_mismatch_exact_required,Exact match mode enabled; COMBINE Total Amount != due_amount.
+30443,2003,HEV-UP-640,combine_close_type_blocked,Loan skipped because COMBINE CLOSE_TYPE is Recovered/Closed/Return.
+30444,2003,HEV-UP-640,combine_close_type_blocked,Loan skipped because COMBINE CLOSE_TYPE is Recovered/Closed/Return.
+30445,2003,HEV-UP-640,combine_close_type_blocked,Loan skipped because COMBINE CLOSE_TYPE is Recovered/Closed/Return.
+30584,2040,HEV-UP-652,combine_close_type_blocked,Loan skipped because COMBINE CLOSE_TYPE is Recovered/Closed/Return.
+30585,2040,HEV-UP-652,combine_close_type_blocked,Loan skipped because COMBINE CLOSE_TYPE is Recovered/Closed/Return.
+30586,2040,HEV-UP-652,combine_close_type_blocked,Loan skipped because COMBINE CLOSE_TYPE is Recovered/Closed/Return.
+30988,2179,HEV-UP-685,amount_mismatch_exact_required,Exact match mode enabled; COMBINE Total Amount != due_amount.
+31000,2162,HEV-UP-686,combine_paid_on_missing_or_invalid,"COMBINE Paid On for this EMI is blank/invalid, so not eligible."
+31028,2188,HEV-UP-688,amount_mismatch_exact_required,Exact match mode enabled; COMBINE Total Amount != due_amount.
+31202,2225,HEV-UP-704,combine_paid_on_missing_or_invalid,"COMBINE Paid On for this EMI is blank/invalid, so not eligible."
+31235,2231,HEV-UP-708,combine_close_type_blocked,Loan skipped because COMBINE CLOSE_TYPE is Recovered/Closed/Return.
+31236,2231,HEV-UP-708,combine_close_type_blocked,Loan skipped because COMBINE CLOSE_TYPE is Recovered/Closed/Return.
+31237,2231,HEV-UP-708,combine_close_type_blocked,Loan skipped because COMBINE CLOSE_TYPE is Recovered/Closed/Return.
+31238,2231,HEV-UP-708,combine_close_type_blocked,Loan skipped because COMBINE CLOSE_TYPE is Recovered/Closed/Return.
+31322,2261,HEV-UP-717,combine_paid_on_missing_or_invalid,"COMBINE Paid On for this EMI is blank/invalid, so not eligible."
+31346,2279,HEV-UP-719,combine_paid_on_missing_or_invalid,"COMBINE Paid On for this EMI is blank/invalid, so not eligible."
+31359,2283,HEV-UP-720,amount_mismatch_exact_required,Exact match mode enabled; COMBINE Total Amount != due_amount.
+31373,2287,HEV-UP-722,combine_paid_on_missing_or_invalid,"COMBINE Paid On for this EMI is blank/invalid, so not eligible."
+31400,2272,HEV-UP-724,combine_paid_on_missing_or_invalid,"COMBINE Paid On for this EMI is blank/invalid, so not eligible."
+31424,2212,HEV-UP-726,combine_paid_on_missing_or_invalid,"COMBINE Paid On for this EMI is blank/invalid, so not eligible."
+31478,2754,HEV-UP-730,combine_paid_on_missing_or_invalid,"COMBINE Paid On for this EMI is blank/invalid, so not eligible."
+31514,2766,HEV-UP-733,combine_paid_on_missing_or_invalid,"COMBINE Paid On for this EMI is blank/invalid, so not eligible."
+31544,2779,HEV-UP-735,combine_paid_on_missing_or_invalid,"COMBINE Paid On for this EMI is blank/invalid, so not eligible."
+31967,2832,HEV-UP-771,combine_close_type_blocked,Loan skipped because COMBINE CLOSE_TYPE is Recovered/Closed/Return.
+31968,2832,HEV-UP-771,combine_close_type_blocked,Loan skipped because COMBINE CLOSE_TYPE is Recovered/Closed/Return.
+31969,2832,HEV-UP-771,combine_close_type_blocked,Loan skipped because COMBINE CLOSE_TYPE is Recovered/Closed/Return.
+32087,2938,HEV-UP-782,amount_mismatch_exact_required,Exact match mode enabled; COMBINE Total Amount != due_amount.
+32534,3080,HEV-UP-817,amount_mismatch_exact_required,Exact match mode enabled; COMBINE Total Amount != due_amount.
+32937,3180,HEV-UP-852,combine_close_type_blocked,Loan skipped because COMBINE CLOSE_TYPE is Recovered/Closed/Return.
+32938,3180,HEV-UP-852,combine_close_type_blocked,Loan skipped because COMBINE CLOSE_TYPE is Recovered/Closed/Return.
+32939,3180,HEV-UP-852,combine_close_type_blocked,Loan skipped because COMBINE CLOSE_TYPE is Recovered/Closed/Return.
+33029,3219,HEV-UP-861,combine_paid_on_missing_or_invalid,"COMBINE Paid On for this EMI is blank/invalid, so not eligible."
+33047,3228,HEV-UP-862,combine_paid_on_missing_or_invalid,"COMBINE Paid On for this EMI is blank/invalid, so not eligible."
+33057,3231,HEV-UP-863,amount_mismatch_exact_required,Exact match mode enabled; COMBINE Total Amount != due_amount.
+33058,3231,HEV-UP-863,amount_mismatch_exact_required,Exact match mode enabled; COMBINE Total Amount != due_amount.
+33059,3231,HEV-UP-863,combine_paid_on_missing_or_invalid,"COMBINE Paid On for this EMI is blank/invalid, so not eligible."
+33257,3299,HEV-UP-882,combine_paid_on_missing_or_invalid,"COMBINE Paid On for this EMI is blank/invalid, so not eligible."
+33269,3292,HEV-UP-883,combine_paid_on_missing_or_invalid,"COMBINE Paid On for this EMI is blank/invalid, so not eligible."
+33299,3312,HEV-UP-886,combine_paid_on_missing_or_invalid,"COMBINE Paid On for this EMI is blank/invalid, so not eligible."
+33314,3294,HEV-UP-887,combine_paid_on_missing_or_invalid,"COMBINE Paid On for this EMI is blank/invalid, so not eligible."
+33344,3345,HEV-UP-889,combine_paid_on_missing_or_invalid,"COMBINE Paid On for this EMI is blank/invalid, so not eligible."
+33509,3365,HEV-UP-901,combine_paid_on_missing_or_invalid,"COMBINE Paid On for this EMI is blank/invalid, so not eligible."
+33545,3368,HEV-UP-905,combine_paid_on_missing_or_invalid,"COMBINE Paid On for this EMI is blank/invalid, so not eligible."
+33620,3403,HEV-UP-910,combine_paid_on_missing_or_invalid,"COMBINE Paid On for this EMI is blank/invalid, so not eligible."
+33650,3418,HEV-UP-916,combine_paid_on_missing_or_invalid,"COMBINE Paid On for this EMI is blank/invalid, so not eligible."
+33674,3445,HEV-UP-918,combine_paid_on_missing_or_invalid,"COMBINE Paid On for this EMI is blank/invalid, so not eligible."
+33686,3452,HEV-UP-919,combine_paid_on_missing_or_invalid,"COMBINE Paid On for this EMI is blank/invalid, so not eligible."
+33713,3456,HEV-UP-922,combine_paid_on_missing_or_invalid,"COMBINE Paid On for this EMI is blank/invalid, so not eligible."
+33725,3469,HEV-UP-923,combine_paid_on_missing_or_invalid,"COMBINE Paid On for this EMI is blank/invalid, so not eligible."
+33737,3458,HEV-UP-924,combine_paid_on_missing_or_invalid,"COMBINE Paid On for this EMI is blank/invalid, so not eligible."
+33859,3530,HEV-UP-937,combine_paid_on_missing_or_invalid,"COMBINE Paid On for this EMI is blank/invalid, so not eligible."
+34042,3607,HEV-UP-953,amount_mismatch_exact_required,Exact match mode enabled; COMBINE Total Amount != due_amount.
+34111,1120,HEV-FINTR-2,combine_paid_on_missing_or_invalid,"COMBINE Paid On for this EMI is blank/invalid, so not eligible."
+34112,1120,HEV-FINTR-2,combine_paid_on_missing_or_invalid,"COMBINE Paid On for this EMI is blank/invalid, so not eligible."
+34113,1120,HEV-FINTR-2,combine_paid_on_missing_or_invalid,"COMBINE Paid On for this EMI is blank/invalid, so not eligible."
+34114,1120,HEV-FINTR-2,combine_paid_on_missing_or_invalid,"COMBINE Paid On for this EMI is blank/invalid, so not eligible."
+34336,3463,HEV-Litfin-1,combine_paid_on_missing_or_invalid,"COMBINE Paid On for this EMI is blank/invalid, so not eligible."
+34348,3461,HEV-Litfin-2,combine_paid_on_missing_or_invalid,"COMBINE Paid On for this EMI is blank/invalid, so not eligible."
+34358,3499,HEV-Litfin-3,amount_mismatch_exact_required,Exact match mode enabled; COMBINE Total Amount != due_amount.
+34360,3499,HEV-Litfin-3,combine_paid_on_missing_or_invalid,"COMBINE Paid On for this EMI is blank/invalid, so not eligible."
+34372,3502,HEV-Litfin-4,combine_paid_on_missing_or_invalid,"COMBINE Paid On for this EMI is blank/invalid, so not eligible."
+34401,3491,HEV-Litfin-6,combine_paid_on_missing_or_invalid,"COMBINE Paid On for this EMI is blank/invalid, so not eligible."
+34503,3548,HEV-Litfin-14,combine_paid_on_missing_or_invalid,"COMBINE Paid On for this EMI is blank/invalid, so not eligible."
+34521,3561,HEV-Litfin-15,combine_paid_on_missing_or_invalid,"COMBINE Paid On for this EMI is blank/invalid, so not eligible."
+35041,18,HEV-000231,no_COMBINE_for_loan,No matching loan row found in COMBINE tracker for this loan.
+35042,18,HEV-000231,no_COMBINE_for_loan,No matching loan row found in COMBINE tracker for this loan.
+35105,53,HEV-000233,amount_mismatch_exact_required,Exact match mode enabled; COMBINE Total Amount != due_amount.
+35139,2500,HEV-000326,no_COMBINE_for_loan,No matching loan row found in COMBINE tracker for this loan.
+35168,553,HEV-000341,no_COMBINE_for_loan,No matching loan row found in COMBINE tracker for this loan.
+35169,553,HEV-000341,no_COMBINE_for_loan,No matching loan row found in COMBINE tracker for this loan.
+50294,958,HEV-UP-351,part_payment_not_handled,Part payment subtype is intentionally skipped by policy.
+50301,2335,HEV-000054,part_payment_not_handled,Part payment subtype is intentionally skipped by policy.
+50303,2686,HEV-UP-214,part_payment_not_handled,Part payment subtype is intentionally skipped by policy.
+50304,2892,HEV-UP-772,part_payment_not_handled,Part payment subtype is intentionally skipped by policy.
+50305,2892,HEV-UP-772,part_payment_not_handled,Part payment subtype is intentionally skipped by policy.
+50308,1137,HEV-UP-410,part_payment_not_handled,Part payment subtype is intentionally skipped by policy.
+50309,1137,HEV-UP-410,part_payment_not_handled,Part payment subtype is intentionally skipped by policy.
+50312,2938,HEV-UP-782,part_payment_not_handled,Part payment subtype is intentionally skipped by policy.
+50313,2938,HEV-UP-782,part_payment_not_handled,Part payment subtype is intentionally skipped by policy.
+50315,2266,HEV-UPW-46,part_payment_not_handled,Part payment subtype is intentionally skipped by policy.
+50317,41,HEV-UP-85,part_payment_not_handled,Part payment subtype is intentionally skipped by policy.
+50437,3672,HEV-UP-963,combine_total_amount_not_usable,COMBINE Total Amount is blank/NA/non-numeric for this EMI.
+50438,3672,HEV-UP-963,combine_total_amount_not_usable,COMBINE Total Amount is blank/NA/non-numeric for this EMI.
+50468,3700,HEV-UP-977,combine_paid_on_missing_or_invalid,"COMBINE Paid On for this EMI is blank/invalid, so not eligible."
+50557,3626,HEV-UP-962,combine_total_amount_not_usable,COMBINE Total Amount is blank/NA/non-numeric for this EMI.
+50558,3626,HEV-UP-962,combine_total_amount_not_usable,COMBINE Total Amount is blank/NA/non-numeric for this EMI.
+50782,3706,HEV-UPW-157,combine_close_type_blocked,Loan skipped because COMBINE CLOSE_TYPE is Recovered/Closed/Return.
+50783,3706,HEV-UPW-157,combine_close_type_blocked,Loan skipped because COMBINE CLOSE_TYPE is Recovered/Closed/Return.
+50856,3613,HEV-001004,amount_mismatch_exact_required,Exact match mode enabled; COMBINE Total Amount != due_amount.
+50870,3514,HEV-001003,amount_mismatch_exact_required,Exact match mode enabled; COMBINE Total Amount != due_amount.
+50871,3514,HEV-001003,amount_mismatch_exact_required,Exact match mode enabled; COMBINE Total Amount != due_amount.
+50886,3584,HEV-Litfin-21,amount_mismatch_exact_required,Exact match mode enabled; COMBINE Total Amount != due_amount.
+51014,2709,HEV-000092,part_payment_not_handled,Part payment subtype is intentionally skipped by policy.
+51018,1918,HEV-UP-619,part_payment_not_handled,Part payment subtype is intentionally skipped by policy.
+51020,2732,HEV-UP-306,combine_close_type_blocked,Loan skipped because COMBINE CLOSE_TYPE is Recovered/Closed/Return.
+51027,3726,HEV-Litfin-33,combine_paid_on_missing_or_invalid,"COMBINE Paid On for this EMI is blank/invalid, so not eligible."
+51028,3726,HEV-Litfin-33,combine_paid_on_missing_or_invalid,"COMBINE Paid On for this EMI is blank/invalid, so not eligible."
+51219,2636,HEV-UP-42,part_payment_not_handled,Part payment subtype is intentionally skipped by policy.
+51221,530,HEV-000371,part_payment_not_handled,Part payment subtype is intentionally skipped by policy.
+51627,505,HEV-RJ-155,part_payment_not_handled,Part payment subtype is intentionally skipped by policy.
+51786,22,HEV-000203,part_payment_not_handled,Part payment subtype is intentionally skipped by policy.
+51790,567,HEV-000402,part_payment_not_handled,Part payment subtype is intentionally skipped by policy.
+51877,818,HEV-RJ-198,part_payment_not_handled,Part payment subtype is intentionally skipped by policy.
+51879,2544,HEV-RJ-31,part_payment_not_handled,Part payment subtype is intentionally skipped by policy.
+52016,3829,HEV-001039,combine_paid_on_missing_or_invalid,"COMBINE Paid On for this EMI is blank/invalid, so not eligible."
+52159,11,HEV-000216,part_payment_not_handled,Part payment subtype is intentionally skipped by policy.
+52163,577,HEV-RJ-160,part_payment_not_handled,Part payment subtype is intentionally skipped by policy.
+52165,632,HEV-RJ-167,part_payment_not_handled,Part payment subtype is intentionally skipped by policy.
+52169,1289,HEV-RJ-262,part_payment_not_handled,Part payment subtype is intentionally skipped by policy.
+52171,288,HEV-RJ-134,part_payment_not_handled,Part payment subtype is intentionally skipped by policy.
+52173,2486,HEV-000261,part_payment_not_handled,Part payment subtype is intentionally skipped by policy.
+52175,292,HEV-RJ-151,part_payment_not_handled,Part payment subtype is intentionally skipped by policy.
+52177,1354,HEV-RJ-270,part_payment_not_handled,Part payment subtype is intentionally skipped by policy.
+52179,377,HEV-000335,part_payment_not_handled,Part payment subtype is intentionally skipped by policy.
+52181,1293,HEV-000586,part_payment_not_handled,Part payment subtype is intentionally skipped by policy.
+52368,1970,HEV-000764,part_payment_not_handled,Part payment subtype is intentionally skipped by policy.
+52617,3877,HEV-UP-1024,combine_paid_on_missing_or_invalid,"COMBINE Paid On for this EMI is blank/invalid, so not eligible."
+52700,295,HEV-RJ-126,part_payment_not_handled,Part payment subtype is intentionally skipped by policy.
+52702,2349,HEV-000072,part_payment_not_handled,Part payment subtype is intentionally skipped by policy.
+52704,496,HEV-000357,part_payment_not_handled,Part payment subtype is intentionally skipped by policy.
+52746,1209,HEV-RJ-247,part_payment_not_handled,Part payment subtype is intentionally skipped by policy.
+52748,2403,HEV-000142,part_payment_not_handled,Part payment subtype is intentionally skipped by policy.
+52750,1445,HEV-000638,part_payment_not_handled,Part payment subtype is intentionally skipped by policy.
+52754,657,HEV-000437,part_payment_not_handled,Part payment subtype is intentionally skipped by policy.
+52864,3897,HEV-Litfin-44,combine_paid_on_missing_or_invalid,"COMBINE Paid On for this EMI is blank/invalid, so not eligible."
+52937,3773,HEV-UP-1030,combine_paid_on_missing_or_invalid,"COMBINE Paid On for this EMI is blank/invalid, so not eligible."
+53287,2010,HEV-UP-658,part_payment_not_handled,Part payment subtype is intentionally skipped by policy.
+53302,103,HEV-RJ-74,part_payment_not_handled,Part payment subtype is intentionally skipped by policy.
+53304,8,HEV-000221,part_payment_not_handled,Part payment subtype is intentionally skipped by policy.
+53306,1973,HEV-FINTR-4,part_payment_not_handled,Part payment subtype is intentionally skipped by policy.
+53310,1300,HEV-000629,part_payment_not_handled,Part payment subtype is intentionally skipped by policy.
+53312,2404,HEV-000144,part_payment_not_handled,Part payment subtype is intentionally skipped by policy.
+53314,380,HEV-RJ-130,part_payment_not_handled,Part payment subtype is intentionally skipped by policy.
+53352,3932,HEV-Litfin-50,combine_paid_on_missing_or_invalid,"COMBINE Paid On for this EMI is blank/invalid, so not eligible."
+53353,3932,HEV-Litfin-50,combine_paid_on_missing_or_invalid,"COMBINE Paid On for this EMI is blank/invalid, so not eligible."
+53552,3788,HEV-001035,combine_close_type_blocked,Loan skipped because COMBINE CLOSE_TYPE is Recovered/Closed/Return.
+53553,3788,HEV-001035,combine_close_type_blocked,Loan skipped because COMBINE CLOSE_TYPE is Recovered/Closed/Return.
+53609,3304,HEV-000956,combine_paid_on_missing_or_invalid,"COMBINE Paid On for this EMI is blank/invalid, so not eligible."
+53732,3964,HEV-UPW-210,combine_paid_on_missing_or_invalid,"COMBINE Paid On for this EMI is blank/invalid, so not eligible."
+53750,3982,HEV-UPW-213,combine_paid_on_missing_or_invalid,"COMBINE Paid On for this EMI is blank/invalid, so not eligible."
+53834,1422,HEV-000681,part_payment_not_handled,Part payment subtype is intentionally skipped by policy.
+53963,3992,HEV-UP-1052,combine_paid_on_missing_or_invalid,"COMBINE Paid On for this EMI is blank/invalid, so not eligible."
+54023,3991,HEV-Litfin-52,combine_paid_on_missing_or_invalid,"COMBINE Paid On for this EMI is blank/invalid, so not eligible."
+54035,4000,HEV-UP-1054,combine_paid_on_missing_or_invalid,"COMBINE Paid On for this EMI is blank/invalid, so not eligible."
+54101,3956,HEV-001068,combine_paid_on_missing_or_invalid,"COMBINE Paid On for this EMI is blank/invalid, so not eligible."
+54113,3983,HEV-001072,combine_paid_on_missing_or_invalid,"COMBINE Paid On for this EMI is blank/invalid, so not eligible."
+54308,2153,HEV-000796,part_payment_not_handled,Part payment subtype is intentionally skipped by policy.
+54324,747,HEV-UP-293,part_payment_not_handled,Part payment subtype is intentionally skipped by policy.
+54325,747,HEV-UP-293,part_payment_not_handled,Part payment subtype is intentionally skipped by policy.
+54341,6,HEV-000223,part_payment_not_handled,Part payment subtype is intentionally skipped by policy.
+54440,4019,HEV-UP-1059,combine_paid_on_missing_or_invalid,"COMBINE Paid On for this EMI is blank/invalid, so not eligible."
+54581,3938,HEV-UPW-204,combine_paid_on_missing_or_invalid,"COMBINE Paid On for this EMI is blank/invalid, so not eligible."
+54599,2570,HEV-RJ-73,part_payment_not_handled,Part payment subtype is intentionally skipped by policy.
+54600,4023,HEV-001076,combine_paid_on_missing_or_invalid,"COMBINE Paid On for this EMI is blank/invalid, so not eligible."
+54601,4023,HEV-001076,combine_paid_on_missing_or_invalid,"COMBINE Paid On for this EMI is blank/invalid, so not eligible."
+54613,3971,HEV-001067,combine_paid_on_missing_or_invalid,"COMBINE Paid On for this EMI is blank/invalid, so not eligible."
+54627,381,HEV-RJ-117,part_payment_not_handled,Part payment subtype is intentionally skipped by policy.
+54664,519,HEV-RJ-135,part_payment_not_handled,Part payment subtype is intentionally skipped by policy.
+54711,4039,HEV-UP-1062,combine_paid_on_missing_or_invalid,"COMBINE Paid On for this EMI is blank/invalid, so not eligible."
+54801,3968,HEV-UPW-217,combine_paid_on_missing_or_invalid,"COMBINE Paid On for this EMI is blank/invalid, so not eligible."
+54818,4008,HEV-UPW-223,combine_close_type_blocked,Loan skipped because COMBINE CLOSE_TYPE is Recovered/Closed/Return.
+54819,4008,HEV-UPW-223,combine_close_type_blocked,Loan skipped because COMBINE CLOSE_TYPE is Recovered/Closed/Return.
+54837,2613,HEV-UP-17,part_payment_not_handled,Part payment subtype is intentionally skipped by policy.
+54846,1585,HEV-RJ-294,part_payment_not_handled,Part payment subtype is intentionally skipped by policy.
+54859,2200,HEV-FINTR-11,part_payment_not_handled,Part payment subtype is intentionally skipped by policy.
+54861,7,HEV-000222,part_payment_not_handled,Part payment subtype is intentionally skipped by policy.
+54863,4063,HEV-Litfin-58,combine_paid_on_missing_or_invalid,"COMBINE Paid On for this EMI is blank/invalid, so not eligible."
+54875,4061,HEV-UPW-228,combine_paid_on_missing_or_invalid,"COMBINE Paid On for this EMI is blank/invalid, so not eligible."
+54905,4032,HEV-UP-1065,combine_paid_on_missing_or_invalid,"COMBINE Paid On for this EMI is blank/invalid, so not eligible."
+54966,74,HEV-UP-98,part_payment_not_handled,Part payment subtype is intentionally skipped by policy.
+55000,4073,HEV-UPW-233,combine_paid_on_missing_or_invalid,"COMBINE Paid On for this EMI is blank/invalid, so not eligible."
+55024,4055,HEV-001082,combine_paid_on_missing_or_invalid,"COMBINE Paid On for this EMI is blank/invalid, so not eligible."
+55036,3292,HEV-UP-883,part_payment_not_handled,Part payment subtype is intentionally skipped by policy.
+55038,1179,HEV-UP-415,part_payment_not_handled,Part payment subtype is intentionally skipped by policy.
+55040,1657,HEV-UP-532,part_payment_not_handled,Part payment subtype is intentionally skipped by policy.
+55042,734,HEV-000453,part_payment_not_handled,Part payment subtype is intentionally skipped by policy.
+55094,4085,HEV-UP-1069,combine_paid_on_missing_or_invalid,"COMBINE Paid On for this EMI is blank/invalid, so not eligible."
+55106,4066,HEV-UPW-230,combine_paid_on_missing_or_invalid,"COMBINE Paid On for this EMI is blank/invalid, so not eligible."
+55118,4071,HEV-UP-1070,combine_paid_on_missing_or_invalid,"COMBINE Paid On for this EMI is blank/invalid, so not eligible."
+55159,2205,HEV-UP-695,part_payment_not_handled,Part payment subtype is intentionally skipped by policy.
+55161,724,HEV-UP-292,part_payment_not_handled,Part payment subtype is intentionally skipped by policy.
+55163,3228,HEV-UP-862,part_payment_not_handled,Part payment subtype is intentionally skipped by policy.
+55165,165,HEV-RJ-89,part_payment_not_handled,Part payment subtype is intentionally skipped by policy.
+55186,4088,HEV-001085,amount_mismatch_exact_required,Exact match mode enabled; COMBINE Total Amount != due_amount.
+55315,2314,HEV-000023,part_payment_not_handled,Part payment subtype is intentionally skipped by policy.
+55353,4041,HEV-UP-1068,combine_paid_on_missing_or_invalid,"COMBINE Paid On for this EMI is blank/invalid, so not eligible."
+55365,4049,HEV-Litfin-59,combine_paid_on_missing_or_invalid,"COMBINE Paid On for this EMI is blank/invalid, so not eligible."
+55421,4109,HEV-Litfin-60,combine_paid_on_missing_or_invalid,"COMBINE Paid On for this EMI is blank/invalid, so not eligible."
+55439,2279,HEV-UP-719,part_payment_not_handled,Part payment subtype is intentionally skipped by policy.
+55509,729,HEV-RJ-182,part_payment_not_handled,Part payment subtype is intentionally skipped by policy.
+55640,1258,HEV-RJ-256,part_payment_not_handled,Part payment subtype is intentionally skipped by policy.
+55670,2358,HEV-000085,part_payment_not_handled,Part payment subtype is intentionally skipped by policy.
+55757,4156,HEV-UPW-251,amount_mismatch_exact_required,Exact match mode enabled; COMBINE Total Amount != due_amount.
+55825,3450,HEV-000975,part_payment_not_handled,Part payment subtype is intentionally skipped by policy.
+55826,2695,HEV-UP-280,part_payment_not_handled,Part payment subtype is intentionally skipped by policy.
+55827,2695,HEV-UP-280,part_payment_not_handled,Part payment subtype is intentionally skipped by policy.
+55835,2782,HEV-RJ-364,part_payment_not_handled,Part payment subtype is intentionally skipped by policy.
+55845,4090,HEV-UPW-256,amount_mismatch_exact_required,Exact match mode enabled; COMBINE Total Amount != due_amount.
+56106,1793,HEV-UP-585,part_payment_not_handled,Part payment subtype is intentionally skipped by policy.
+56107,1475,HEV-000646,combine_paid_on_missing_or_invalid,"COMBINE Paid On for this EMI is blank/invalid, so not eligible."
+56108,1475,HEV-000646,combine_paid_on_missing_or_invalid,"COMBINE Paid On for this EMI is blank/invalid, so not eligible."
+56138,860,HEV-RJ-202,part_payment_not_handled,Part payment subtype is intentionally skipped by policy.
+56331,1778,HEV-UP-572,part_payment_not_handled,Part payment subtype is intentionally skipped by policy.
+56333,1420,HEV-UP-473,part_payment_not_handled,Part payment subtype is intentionally skipped by policy.
+56473,4240,HEV-UP-1104,combine_paid_on_missing_or_invalid,"COMBINE Paid On for this EMI is blank/invalid, so not eligible."
+56518,2828,HEV-UP-754,part_payment_not_handled,Part payment subtype is intentionally skipped by policy.
+56519,2828,HEV-UP-754,part_payment_not_handled,Part payment subtype is intentionally skipped by policy.
+56520,280,HEV-UP-148,part_payment_not_handled,Part payment subtype is intentionally skipped by policy.
+56521,280,HEV-UP-148,part_payment_not_handled,Part payment subtype is intentionally skipped by policy.
+56522,2656,HEV-UP-67,part_payment_not_handled,Part payment subtype is intentionally skipped by policy.
+56523,2656,HEV-UP-67,part_payment_not_handled,Part payment subtype is intentionally skipped by policy.
+56525,3456,HEV-UP-922,part_payment_not_handled,Part payment subtype is intentionally skipped by policy.
+56526,452,HEV-UP-218,part_payment_not_handled,Part payment subtype is intentionally skipped by policy.
+56527,452,HEV-UP-218,part_payment_not_handled,Part payment subtype is intentionally skipped by policy.
+56528,3368,HEV-UP-905,part_payment_not_handled,Part payment subtype is intentionally skipped by policy.
+56529,3368,HEV-UP-905,part_payment_not_handled,Part payment subtype is intentionally skipped by policy.
+56531,1065,HEV-UP-385,part_payment_not_handled,Part payment subtype is intentionally skipped by policy.
+56532,1462,HEV-UP-484,part_payment_not_handled,Part payment subtype is intentionally skipped by policy.
+56533,1462,HEV-UP-484,part_payment_not_handled,Part payment subtype is intentionally skipped by policy.
+56534,2694,HEV-UP-275,part_payment_not_handled,Part payment subtype is intentionally skipped by policy.
+56535,2694,HEV-UP-275,part_payment_not_handled,Part payment subtype is intentionally skipped by policy.
+56539,348,HEV-UP-232,part_payment_not_handled,Part payment subtype is intentionally skipped by policy.
+56605,4270,HEV-UP-1108,amount_mismatch_exact_required,Exact match mode enabled; COMBINE Total Amount != due_amount.
+56676,863,HEV-000484,part_payment_not_handled,Part payment subtype is intentionally skipped by policy.
+56699,1828,HEV-000734,part_payment_not_handled,Part payment subtype is intentionally skipped by policy.
+56702,349,HEV-RJ-118,part_payment_not_handled,Part payment subtype is intentionally skipped by policy.
+56704,511,HEV-000338,part_payment_not_handled,Part payment subtype is intentionally skipped by policy.
+56706,901,HEV-000493,part_payment_not_handled,Part payment subtype is intentionally skipped by policy.
+56739,4271,HEV-Litfin-62,amount_mismatch_exact_required,Exact match mode enabled; COMBINE Total Amount != due_amount.
+56842,3550,HEV-000992,part_payment_not_handled,Part payment subtype is intentionally skipped by policy.
+56865,1374,HEV-UP-459,part_payment_not_handled,Part payment subtype is intentionally skipped by policy.
+56867,702,HEV-UP-326,part_payment_not_handled,Part payment subtype is intentionally skipped by policy.
+56935,252,HEV-UP-157,part_payment_not_handled,Part payment subtype is intentionally skipped by policy.
+56955,213,HEV-UP-233,part_payment_not_handled,Part payment subtype is intentionally skipped by policy.
+56957,1350,HEV-RJ-273,part_payment_not_handled,Part payment subtype is intentionally skipped by policy.
+56977,219,HEV-UP-165,part_payment_not_handled,Part payment subtype is intentionally skipped by policy.
+56979,476,HEV-RJ-149,part_payment_not_handled,Part payment subtype is intentionally skipped by policy.
+57048,2975,HEV-UP-791,part_payment_not_handled,Part payment subtype is intentionally skipped by policy.
+57049,2975,HEV-UP-791,part_payment_not_handled,Part payment subtype is intentionally skipped by policy.
+57059,51,HEV-000278,part_payment_not_handled,Part payment subtype is intentionally skipped by policy.
+57203,4232,HEV-UPW-270,amount_mismatch_exact_required,Exact match mode enabled; COMBINE Total Amount != due_amount.
+57237,517,HEV-UP-229,part_payment_not_handled,Part payment subtype is intentionally skipped by policy.
+57241,3662,HEV-001014,part_payment_not_handled,Part payment subtype is intentionally skipped by policy.
+57243,3048,HEV-RJ-349,part_payment_not_handled,Part payment subtype is intentionally skipped by policy.
+57252,1831,HEV-RJ-319,part_payment_not_handled,Part payment subtype is intentionally skipped by policy.
+57330,2606,HEV-UP-9,part_payment_not_handled,Part payment subtype is intentionally skipped by policy.
+57332,1445,HEV-000638,part_payment_not_handled,Part payment subtype is intentionally skipped by policy.
+57334,2486,HEV-000261,part_payment_not_handled,Part payment subtype is intentionally skipped by policy.
+57355,614,HEV-RJ-171,part_payment_not_handled,Part payment subtype is intentionally skipped by policy.
+57357,447,HEV-UP-257,part_payment_not_handled,Part payment subtype is intentionally skipped by policy.
+57359,4298,HEV-Litfin-64,combine_paid_on_missing_or_invalid,"COMBINE Paid On for this EMI is blank/invalid, so not eligible."
+57374,468,HEV-RJ-115,part_payment_not_handled,Part payment subtype is intentionally skipped by policy.
+57381,1499,HEV-UP-494,part_payment_not_handled,Part payment subtype is intentionally skipped by policy.
+57382,1499,HEV-UP-494,part_payment_not_handled,Part payment subtype is intentionally skipped by policy.
+57395,4342,HEV-UPW-287,amount_mismatch_exact_required,Exact match mode enabled; COMBINE Total Amount != due_amount.
+57491,4340,HEV-Litfin-67,combine_paid_on_missing_or_invalid,"COMBINE Paid On for this EMI is blank/invalid, so not eligible."
+57509,649,HEV-UP-270,part_payment_not_handled,Part payment subtype is intentionally skipped by policy.
+57510,649,HEV-UP-270,part_payment_not_handled,Part payment subtype is intentionally skipped by policy.
+57512,2489,HEV-000264,part_payment_not_handled,Part payment subtype is intentionally skipped by policy.
+57514,1857,HEV-000750,part_payment_not_handled,Part payment subtype is intentionally skipped by policy.
+57516,2455,HEV-000204,part_payment_not_handled,Part payment subtype is intentionally skipped by policy.
+57518,364,HEV-000340,part_payment_not_handled,Part payment subtype is intentionally skipped by policy.
+57520,2454,HEV-000202,part_payment_not_handled,Part payment subtype is intentionally skipped by policy.
+57522,1411,HEV-000627,part_payment_not_handled,Part payment subtype is intentionally skipped by policy.
+57523,2529,HEV-RJ-16,part_payment_not_handled,Part payment subtype is intentionally skipped by policy.
+57524,2529,HEV-RJ-16,part_payment_not_handled,Part payment subtype is intentionally skipped by policy.
+57526,1425,HEV-000632,part_payment_not_handled,Part payment subtype is intentionally skipped by policy.
+57528,1347,HEV-000622,part_payment_not_handled,Part payment subtype is intentionally skipped by policy.
+57530,3088,HEV-000854,part_payment_not_handled,Part payment subtype is intentionally skipped by policy.
+57532,1942,HEV-UP-627,part_payment_not_handled,Part payment subtype is intentionally skipped by policy.
+57534,1012,HEV-RJ-231,part_payment_not_handled,Part payment subtype is intentionally skipped by policy.
+57539,1029,HEV-UP-382,part_payment_not_handled,Part payment subtype is intentionally skipped by policy.
+57540,1029,HEV-UP-382,part_payment_not_handled,Part payment subtype is intentionally skipped by policy.
+57541,3116,HEV-UP-830,part_payment_not_handled,Part payment subtype is intentionally skipped by policy.
+57542,3116,HEV-UP-830,part_payment_not_handled,Part payment subtype is intentionally skipped by policy.
+57546,41,HEV-UP-85,part_payment_not_handled,Part payment subtype is intentionally skipped by policy.
+57547,2705,HEV-UP-653,part_payment_not_handled,Part payment subtype is intentionally skipped by policy.
+57548,2705,HEV-UP-653,part_payment_not_handled,Part payment subtype is intentionally skipped by policy.
+57552,80,HEV-UP-97,part_payment_not_handled,Part payment subtype is intentionally skipped by policy.
+57553,3640,HEV-UP-957,part_payment_not_handled,Part payment subtype is intentionally skipped by policy.
+57554,3640,HEV-UP-957,part_payment_not_handled,Part payment subtype is intentionally skipped by policy.
+57556,3697,HEV-UPW-154,part_payment_not_handled,Part payment subtype is intentionally skipped by policy.
+57558,3106,HEV-UPW-83,part_payment_not_handled,Part payment subtype is intentionally skipped by policy.
+57559,1881,HEV-UP-606,part_payment_not_handled,Part payment subtype is intentionally skipped by policy.
+57560,1881,HEV-UP-606,part_payment_not_handled,Part payment subtype is intentionally skipped by policy.
+57561,1369,HEV-UP-465,part_payment_not_handled,Part payment subtype is intentionally skipped by policy.
+57562,1369,HEV-UP-465,part_payment_not_handled,Part payment subtype is intentionally skipped by policy.
+57565,2999,HEV-UP-795,part_payment_not_handled,Part payment subtype is intentionally skipped by policy.
+57566,2999,HEV-UP-795,part_payment_not_handled,Part payment subtype is intentionally skipped by policy.
+57568,1795,HEV-UP-576,part_payment_not_handled,Part payment subtype is intentionally skipped by policy.
+57569,704,HEV-UP-331,part_payment_not_handled,Part payment subtype is intentionally skipped by policy.
+57570,704,HEV-UP-331,part_payment_not_handled,Part payment subtype is intentionally skipped by policy.
+57571,2952,HEV-UP-785,part_payment_not_handled,Part payment subtype is intentionally skipped by policy.
+57572,2952,HEV-UP-785,part_payment_not_handled,Part payment subtype is intentionally skipped by policy.
+57574,586,HEV-000411,part_payment_not_handled,Part payment subtype is intentionally skipped by policy.
+57576,2605,HEV-UP-8,part_payment_not_handled,Part payment subtype is intentionally skipped by policy.
+57578,3144,HEV-UPW-84,part_payment_not_handled,Part payment subtype is intentionally skipped by policy.
+57582,2403,HEV-000142,part_payment_not_handled,Part payment subtype is intentionally skipped by policy.
+57583,659,HEV-UP-266,part_payment_not_handled,Part payment subtype is intentionally skipped by policy.
+57584,659,HEV-UP-266,part_payment_not_handled,Part payment subtype is intentionally skipped by policy.
+57586,1863,HEV-000741,part_payment_not_handled,Part payment subtype is intentionally skipped by policy.
+57692,118,HEV-000290,part_payment_not_handled,Part payment subtype is intentionally skipped by policy.
+57724,109,HEV-UP-108,part_payment_not_handled,Part payment subtype is intentionally skipped by policy.
+57725,2684,HEV-UP-189,part_payment_not_handled,Part payment subtype is intentionally skipped by policy.
+57726,2684,HEV-UP-189,part_payment_not_handled,Part payment subtype is intentionally skipped by policy.
+57742,3146,HEV-UP-842,part_payment_not_handled,Part payment subtype is intentionally skipped by policy.
+57746,3140,HEV-UP-845,part_payment_not_handled,Part payment subtype is intentionally skipped by policy.
+57772,3785,HEV-UPW-180,part_payment_not_handled,Part payment subtype is intentionally skipped by policy.
+57782,3755,HEV-001130,combine_paid_on_missing_or_invalid,"COMBINE Paid On for this EMI is blank/invalid, so not eligible."
+57843,567,HEV-000402,part_payment_not_handled,Part payment subtype is intentionally skipped by policy.
+57845,1869,HEV-000770,part_payment_not_handled,Part payment subtype is intentionally skipped by policy.
+57897,4386,HEV-UP-1128,amount_mismatch_exact_required,Exact match mode enabled; COMBINE Total Amount != due_amount.
+57916,574,HEV-UP-248,part_payment_not_handled,Part payment subtype is intentionally skipped by policy.
+57920,1677,HEV-UPW-17,part_payment_not_handled,Part payment subtype is intentionally skipped by policy.
+57934,2931,HEV-UP-786,part_payment_not_handled,Part payment subtype is intentionally skipped by policy.
+57951,2471,HEV-000240,part_payment_not_handled,Part payment subtype is intentionally skipped by policy.
+57985,2859,HEV-UP-764,part_payment_not_handled,Part payment subtype is intentionally skipped by policy.
+57988,1934,HEV-000758,part_payment_not_handled,Part payment subtype is intentionally skipped by policy.
+57991,2508,HEV-000403,part_payment_not_handled,Part payment subtype is intentionally skipped by policy.
+57994,719,HEV-000447,part_payment_not_handled,Part payment subtype is intentionally skipped by policy.
+58092,4393,HEV-001132,combine_paid_on_missing_or_invalid,"COMBINE Paid On for this EMI is blank/invalid, so not eligible."
+58171,2527,HEV-RJ-14,part_payment_not_handled,Part payment subtype is intentionally skipped by policy.
+58173,2092,HEV-000786,part_payment_not_handled,Part payment subtype is intentionally skipped by policy.
+58175,120,HEV-UP-110,part_payment_not_handled,Part payment subtype is intentionally skipped by policy.
+58195,22,HEV-000203,part_payment_not_handled,Part payment subtype is intentionally skipped by policy.
+58221,410,HEV-UP-144,part_payment_not_handled,Part payment subtype is intentionally skipped by policy.
+58251,4428,HEV-Litfin-69,amount_mismatch_exact_required,Exact match mode enabled; COMBINE Total Amount != due_amount.
+58331,4417,HEV-UP-1137,amount_mismatch_exact_required,Exact match mode enabled; COMBINE Total Amount != due_amount.
+58414,2046,HEV-UP-666,part_payment_not_handled,Part payment subtype is intentionally skipped by policy.
+58418,3693,HEV-UP-975,part_payment_not_handled,Part payment subtype is intentionally skipped by policy.
+58420,3045,HEV-UP-810,part_payment_not_handled,Part payment subtype is intentionally skipped by policy.
+58422,103,HEV-RJ-74,part_payment_not_handled,Part payment subtype is intentionally skipped by policy.
+58448,3791,HEV-UP-1003,part_payment_not_handled,Part payment subtype is intentionally skipped by policy.
+58450,74,HEV-UP-98,part_payment_not_handled,Part payment subtype is intentionally skipped by policy.
+58452,328,HEV-000368,part_payment_not_handled,Part payment subtype is intentionally skipped by policy.
+58454,423,HEV-RJ-114,part_payment_not_handled,Part payment subtype is intentionally skipped by policy.
+58508,4323,HEV-001141,combine_paid_on_missing_or_invalid,"COMBINE Paid On for this EMI is blank/invalid, so not eligible."
+58533,4434,HEV-UPW-305,combine_paid_on_missing_or_invalid,"COMBINE Paid On for this EMI is blank/invalid, so not eligible."
+58676,4368,HEV-UP-1148,combine_paid_on_missing_or_invalid,"COMBINE Paid On for this EMI is blank/invalid, so not eligible."
+58694,4451,HEV-UP-1149,combine_paid_on_missing_or_invalid,"COMBINE Paid On for this EMI is blank/invalid, so not eligible."
+58739,4466,HEV-UP-1154,combine_paid_on_missing_or_invalid,"COMBINE Paid On for this EMI is blank/invalid, so not eligible."
+58793,3700,HEV-UP-977,part_payment_not_handled,Part payment subtype is intentionally skipped by policy.
+58794,3700,HEV-UP-977,part_payment_not_handled,Part payment subtype is intentionally skipped by policy.
+58835,4446,HEV-001145,amount_mismatch_exact_required,Exact match mode enabled; COMBINE Total Amount != due_amount.
+58883,4456,HEV-001149,amount_mismatch_exact_required,Exact match mode enabled; COMBINE Total Amount != due_amount.
+58919,4463,HEV-001151,combine_paid_on_missing_or_invalid,"COMBINE Paid On for this EMI is blank/invalid, so not eligible."
+58967,3633,HEV-UP-956,part_payment_not_handled,Part payment subtype is intentionally skipped by policy.
+58980,2179,HEV-UP-685,part_payment_not_handled,Part payment subtype is intentionally skipped by policy.
+58981,2179,HEV-UP-685,part_payment_not_handled,Part payment subtype is intentionally skipped by policy.
+58995,140,HEV-UP-117,part_payment_not_handled,Part payment subtype is intentionally skipped by policy.
+58999,6,HEV-000223,part_payment_not_handled,Part payment subtype is intentionally skipped by policy.
+59134,4471,HEV-UP-1157,combine_paid_on_missing_or_invalid,"COMBINE Paid On for this EMI is blank/invalid, so not eligible."
+59235,734,HEV-000453,part_payment_not_handled,Part payment subtype is intentionally skipped by policy.
+59239,2188,HEV-UP-688,part_payment_not_handled,Part payment subtype is intentionally skipped by policy.
+59260,4484,HEV-UPW-323,combine_paid_on_missing_or_invalid,"COMBINE Paid On for this EMI is blank/invalid, so not eligible."
+59279,377,HEV-000335,part_payment_not_handled,Part payment subtype is intentionally skipped by policy.
+59308,2312,HEV-000021,part_payment_not_handled,Part payment subtype is intentionally skipped by policy.
+59311,758,HEV-000456,part_payment_not_handled,Part payment subtype is intentionally skipped by policy.
+59368,4512,HEV-UPW-325,combine_paid_on_missing_or_invalid,"COMBINE Paid On for this EMI is blank/invalid, so not eligible."
+59405,2892,HEV-UP-772,part_payment_not_handled,Part payment subtype is intentionally skipped by policy.
+59407,4500,HEV-UP-1161,combine_paid_on_missing_or_invalid,"COMBINE Paid On for this EMI is blank/invalid, so not eligible."
+59426,2611,HEV-UP-15,part_payment_not_handled,Part payment subtype is intentionally skipped by policy.
+59436,2101,HEV-000790,part_payment_not_handled,Part payment subtype is intentionally skipped by policy.
+59441,425,HEV-UP-205,part_payment_not_handled,Part payment subtype is intentionally skipped by policy.
+59464,4517,HEV-001159,combine_paid_on_missing_or_invalid,"COMBINE Paid On for this EMI is blank/invalid, so not eligible."
+59523,4506,HEV-UP-1165,combine_paid_on_missing_or_invalid,"COMBINE Paid On for this EMI is blank/invalid, so not eligible."
+59542,1643,HEV-UPW-13,part_payment_not_handled,Part payment subtype is intentionally skipped by policy.
+59562,724,HEV-UP-292,part_payment_not_handled,Part payment subtype is intentionally skipped by policy.
+59583,3407,HEV-UP-909,part_payment_not_handled,Part payment subtype is intentionally skipped by policy.
+59597,4518,HEV-001162,combine_paid_on_missing_or_invalid,"COMBINE Paid On for this EMI is blank/invalid, so not eligible."
+59690,4528,HEV-UP-1166,combine_paid_on_missing_or_invalid,"COMBINE Paid On for this EMI is blank/invalid, so not eligible."
+59706,4523,HEV-UPW-330,combine_paid_on_missing_or_invalid,"COMBINE Paid On for this EMI is blank/invalid, so not eligible."
+59759,2202,HEV-000887,part_payment_not_handled,Part payment subtype is intentionally skipped by policy.
+59760,3782,HEV-UP-1000,part_payment_not_handled,Part payment subtype is intentionally skipped by policy.
+59761,3782,HEV-UP-1000,part_payment_not_handled,Part payment subtype is intentionally skipped by policy.
+59763,2200,HEV-FINTR-11,part_payment_not_handled,Part payment subtype is intentionally skipped by policy.
+59779,4498,HEV-001164,combine_paid_on_missing_or_invalid,"COMBINE Paid On for this EMI is blank/invalid, so not eligible."
+59809,4366,HEV-UPW-290,amount_mismatch_exact_required,Exact match mode enabled; COMBINE Total Amount != due_amount.
+59858,3149,HEV-UPW-88,part_payment_not_handled,Part payment subtype is intentionally skipped by policy.
+59859,4521,HEV-001166,combine_paid_on_missing_or_invalid,"COMBINE Paid On for this EMI is blank/invalid, so not eligible."
+59877,4546,HEV-UPW-335,combine_paid_on_missing_or_invalid,"COMBINE Paid On for this EMI is blank/invalid, so not eligible."
+59972,4543,HEV-UPW-339,combine_paid_on_missing_or_invalid,"COMBINE Paid On for this EMI is blank/invalid, so not eligible."
+59984,4547,HEV-UPW-338,combine_paid_on_missing_or_invalid,"COMBINE Paid On for this EMI is blank/invalid, so not eligible."
+60020,4548,HEV-UPW-337,combine_paid_on_missing_or_invalid,"COMBINE Paid On for this EMI is blank/invalid, so not eligible."
+60032,4503,HEV-UPW-336,combine_paid_on_missing_or_invalid,"COMBINE Paid On for this EMI is blank/invalid, so not eligible."
+60062,4539,HEV-UP-1171,combine_paid_on_missing_or_invalid,"COMBINE Paid On for this EMI is blank/invalid, so not eligible."
+60093,2613,HEV-UP-17,part_payment_not_handled,Part payment subtype is intentionally skipped by policy.
+60095,2595,HEV-RJ-186,part_payment_not_handled,Part payment subtype is intentionally skipped by policy.
+60114,1464,HEV-000643,part_payment_not_handled,Part payment subtype is intentionally skipped by policy.
+60115,1464,HEV-000643,part_payment_not_handled,Part payment subtype is intentionally skipped by policy.
+60117,774,HEV-UP-297,part_payment_not_handled,Part payment subtype is intentionally skipped by policy.
+60122,1238,HEV-RJ-254,part_payment_not_handled,Part payment subtype is intentionally skipped by policy.
+60124,1238,HEV-RJ-254,part_payment_not_handled,Part payment subtype is intentionally skipped by policy.
+60151,3877,HEV-UP-1024,part_payment_not_handled,Part payment subtype is intentionally skipped by policy.
+60309,3306,HEV-UPW-106,part_payment_not_handled,Part payment subtype is intentionally skipped by policy.
+60335,744,HEV-UP-291,part_payment_not_handled,Part payment subtype is intentionally skipped by policy.
+60396,4567,HEV-001174,combine_paid_on_missing_or_invalid,"COMBINE Paid On for this EMI is blank/invalid, so not eligible."
+60414,4559,HEV-001173,combine_paid_on_missing_or_invalid,"COMBINE Paid On for this EMI is blank/invalid, so not eligible."
+60536,4009,HEV-UP-1055,amount_mismatch_exact_required,Exact match mode enabled; COMBINE Total Amount != due_amount.
+60537,4009,HEV-UP-1055,combine_paid_on_missing_or_invalid,"COMBINE Paid On for this EMI is blank/invalid, so not eligible."
+60549,2498,HEV-000307,part_payment_not_handled,Part payment subtype is intentionally skipped by policy.
+60551,838,HEV-000473,part_payment_not_handled,Part payment subtype is intentionally skipped by policy.
+60555,1420,HEV-UP-473,part_payment_not_handled,Part payment subtype is intentionally skipped by policy.
+60572,2749,HEV-RJ-363,part_payment_not_handled,Part payment subtype is intentionally skipped by policy.
+60594,2266,HEV-UPW-46,part_payment_not_handled,Part payment subtype is intentionally skipped by policy.
+60604,728,HEV-UP-286,part_payment_not_handled,Part payment subtype is intentionally skipped by policy.
+60606,3404,HEV-000965,part_payment_not_handled,Part payment subtype is intentionally skipped by policy.
+60770,1518,HEV-UP-498,part_payment_not_handled,Part payment subtype is intentionally skipped by policy.
+60796,2444,HEV-000191,part_payment_not_handled,Part payment subtype is intentionally skipped by policy.
+60798,1226,HEV-000565,part_payment_not_handled,Part payment subtype is intentionally skipped by policy.
+60830,500,HEV-000324,part_payment_not_handled,Part payment subtype is intentionally skipped by policy.
+60834,2241,HEV-RJ-356,part_payment_not_handled,Part payment subtype is intentionally skipped by policy.
+60848,776,HEV-UP-296,part_payment_not_handled,Part payment subtype is intentionally skipped by policy.
+60966,1561,HEV-UP-519,part_payment_not_handled,Part payment subtype is intentionally skipped by policy.
+60971,1710,HEV-UP-549,part_payment_not_handled,Part payment subtype is intentionally skipped by policy.
+60973,1710,HEV-UP-549,part_payment_not_handled,Part payment subtype is intentionally skipped by policy.
+60976,1715,HEV-UPW-19,part_payment_not_handled,Part payment subtype is intentionally skipped by policy.
+61293,97,HEV-UP-102,part_payment_not_handled,Part payment subtype is intentionally skipped by policy.
+61295,1900,HEV-UP-725,part_payment_not_handled,Part payment subtype is intentionally skipped by policy.
+61376,4075,HEV-001084,combine_paid_on_missing_or_invalid,"COMBINE Paid On for this EMI is blank/invalid, so not eligible."
+61579,3976,HEV-Litfin-51,part_payment_not_handled,Part payment subtype is intentionally skipped by policy.
+61580,3976,HEV-Litfin-51,part_payment_not_handled,Part payment subtype is intentionally skipped by policy.
+61602,2358,HEV-000085,part_payment_not_handled,Part payment subtype is intentionally skipped by policy.
+61603,1101,HEV-UP-397,part_payment_not_handled,Part payment subtype is intentionally skipped by policy.
+61604,1101,HEV-UP-397,part_payment_not_handled,Part payment subtype is intentionally skipped by policy.
+61625,1756,HEV-UP-567,part_payment_not_handled,Part payment subtype is intentionally skipped by policy.
+61626,1756,HEV-UP-567,part_payment_not_handled,Part payment subtype is intentionally skipped by policy.
+61846,1007,HEV-000514,part_payment_not_handled,Part payment subtype is intentionally skipped by policy.
+61886,2335,HEV-000054,part_payment_not_handled,Part payment subtype is intentionally skipped by policy.
+62480,2162,HEV-UP-686,part_payment_not_handled,Part payment subtype is intentionally skipped by policy.
+62941,1372,HEV-000609,part_payment_not_handled,Part payment subtype is intentionally skipped by policy.
+62942,1372,HEV-000609,part_payment_not_handled,Part payment subtype is intentionally skipped by policy.
+62948,1911,HEV-UP-618,part_payment_not_handled,Part payment subtype is intentionally skipped by policy.
+62975,1871,HEV-UP-603,part_payment_not_handled,Part payment subtype is intentionally skipped by policy.
+63082,213,HEV-UP-233,part_payment_not_handled,Part payment subtype is intentionally skipped by policy.
+63109,1828,HEV-000734,part_payment_not_handled,Part payment subtype is intentionally skipped by policy.
+63201,4787,HEV-UP-1235,combine_paid_on_missing_or_invalid,"COMBINE Paid On for this EMI is blank/invalid, so not eligible."
+63242,2999,HEV-UP-795,part_payment_not_handled,Part payment subtype is intentionally skipped by policy.
+63243,2999,HEV-UP-795,part_payment_not_handled,Part payment subtype is intentionally skipped by policy.
+63270,2749,HEV-RJ-363,part_payment_not_handled,Part payment subtype is intentionally skipped by policy.
+63795,567,HEV-000402,part_payment_not_handled,Part payment subtype is intentionally skipped by policy.
+64007,2349,HEV-000072,part_payment_not_handled,Part payment subtype is intentionally skipped by policy.
+64009,901,HEV-000493,part_payment_not_handled,Part payment subtype is intentionally skipped by policy.
+64175,2714,HEV-000206,part_payment_not_handled,Part payment subtype is intentionally skipped by policy.
+64422,4036,HEV-Litfin-56,combine_paid_on_missing_or_invalid,"COMBINE Paid On for this EMI is blank/invalid, so not eligible."
+64555,1467,HEV-UP-487,part_payment_not_handled,Part payment subtype is intentionally skipped by policy.
+64795,1011,HEV-UP-363,part_payment_not_handled,Part payment subtype is intentionally skipped by policy.
+64796,1011,HEV-UP-363,part_payment_not_handled,Part payment subtype is intentionally skipped by policy.
+64798,517,HEV-UP-229,part_payment_not_handled,Part payment subtype is intentionally skipped by policy.
+64847,1002,HEV-UP-362,part_payment_not_handled,Part payment subtype is intentionally skipped by policy.
+64849,3763,HEV-UP-994,part_payment_not_handled,Part payment subtype is intentionally skipped by policy.
+64850,2681,HEV-UP-174,part_payment_not_handled,Part payment subtype is intentionally skipped by policy.
+64851,2681,HEV-UP-174,part_payment_not_handled,Part payment subtype is intentionally skipped by policy.
+65193,1342,HEV-UP-453,part_payment_not_handled,Part payment subtype is intentionally skipped by policy.
+65194,1342,HEV-UP-453,part_payment_not_handled,Part payment subtype is intentionally skipped by policy.
+65209,657,HEV-000437,part_payment_not_handled,Part payment subtype is intentionally skipped by policy.
+65391,5009,HEV-UPW-472,combine_paid_on_missing_or_invalid,"COMBINE Paid On for this EMI is blank/invalid, so not eligible."
+65545,2607,HEV-UP-10,part_payment_not_handled,Part payment subtype is intentionally skipped by policy.
+65546,2607,HEV-UP-10,part_payment_not_handled,Part payment subtype is intentionally skipped by policy.
+65828,4309,HEV-UPW-282,part_payment_not_handled,Part payment subtype is intentionally skipped by policy.
+65829,3111,HEV-UP-829,part_payment_not_handled,Part payment subtype is intentionally skipped by policy.
+65830,3111,HEV-UP-829,part_payment_not_handled,Part payment subtype is intentionally skipped by policy.
+65874,2126,HEV-FINTR-9,part_payment_not_handled,Part payment subtype is intentionally skipped by policy.
+65914,684,HEV-UP-279,part_payment_not_handled,Part payment subtype is intentionally skipped by policy.
+65920,3076,HEV-UP-820,part_payment_not_handled,Part payment subtype is intentionally skipped by policy.
+65926,3451,,loan_not_in_LOS,Loan ID exists in dp_sheet but is not present in LOS mapping.
+65927,3451,,loan_not_in_LOS,Loan ID exists in dp_sheet but is not present in LOS mapping.
+66048,2010,HEV-UP-658,part_payment_not_handled,Part payment subtype is intentionally skipped by policy.
+66049,2010,HEV-UP-658,part_payment_not_handled,Part payment subtype is intentionally skipped by policy.
+66050,4281,HEV-UP-1119,part_payment_not_handled,Part payment subtype is intentionally skipped by policy.
+66051,4281,HEV-UP-1119,part_payment_not_handled,Part payment subtype is intentionally skipped by policy.
+66115,3556,HEV-000993,part_payment_not_handled,Part payment subtype is intentionally skipped by policy.
+66197,22,HEV-000203,part_payment_not_handled,Part payment subtype is intentionally skipped by policy.
+66199,1112,HEV-000538,part_payment_not_handled,Part payment subtype is intentionally skipped by policy.
+66316,1824,HEV-UP-595,combine_paid_on_missing_or_invalid,"COMBINE Paid On for this EMI is blank/invalid, so not eligible."
+66318,2105,HEV-UP-675,part_payment_not_handled,Part payment subtype is intentionally skipped by policy.
+66319,3099,HEV-UP-825,part_payment_not_handled,Part payment subtype is intentionally skipped by policy.
+66320,3099,HEV-UP-825,part_payment_not_handled,Part payment subtype is intentionally skipped by policy.
+66499,390,HEV-000367,no_COMBINE_for_loan,No matching loan row found in COMBINE tracker for this loan.
+66569,2176,HEV-000882,part_payment_not_handled,Part payment subtype is intentionally skipped by policy.
+66695,2702,HEV-UP-507,part_payment_not_handled,Part payment subtype is intentionally skipped by policy.
+66849,3983,HEV-001072,part_payment_not_handled,Part payment subtype is intentionally skipped by policy.
+66895,2337,HEV-000058,part_payment_not_handled,Part payment subtype is intentionally skipped by policy.
+66896,2337,HEV-000058,part_payment_not_handled,Part payment subtype is intentionally skipped by policy.
+67098,3924,HEV-UP-1036,part_payment_not_handled,Part payment subtype is intentionally skipped by policy.
+67099,3924,HEV-UP-1036,part_payment_not_handled,Part payment subtype is intentionally skipped by policy.
+67186,427,HEV-RJ-158,part_payment_not_handled,Part payment subtype is intentionally skipped by policy.
+67188,3858,HEV-UP-1017,part_payment_not_handled,Part payment subtype is intentionally skipped by policy.
+67189,3858,HEV-UP-1017,part_payment_not_handled,Part payment subtype is intentionally skipped by policy.
+67190,3855,HEV-UPW-199,combine_paid_on_missing_or_invalid,"COMBINE Paid On for this EMI is blank/invalid, so not eligible."
+67191,3855,HEV-UPW-199,combine_paid_on_missing_or_invalid,"COMBINE Paid On for this EMI is blank/invalid, so not eligible."
+67193,2187,HEV-UP-689,part_payment_not_handled,Part payment subtype is intentionally skipped by policy.
+67194,2131,HEV-UP-681,part_payment_not_handled,Part payment subtype is intentionally skipped by policy.
+67195,2131,HEV-UP-681,part_payment_not_handled,Part payment subtype is intentionally skipped by policy.
+67217,5194,HEV-UPW-533,combine_paid_on_missing_or_invalid,"COMBINE Paid On for this EMI is blank/invalid, so not eligible."
+67305,140,HEV-UP-117,combine_paid_on_missing_or_invalid,"COMBINE Paid On for this EMI is blank/invalid, so not eligible."
+67306,140,HEV-UP-117,combine_paid_on_missing_or_invalid,"COMBINE Paid On for this EMI is blank/invalid, so not eligible."
+67343,724,HEV-UP-292,part_payment_not_handled,Part payment subtype is intentionally skipped by policy.
+67344,724,HEV-UP-292,part_payment_not_handled,Part payment subtype is intentionally skipped by policy.
+67359,3387,HEV-UP-906,combine_paid_on_missing_or_invalid,"COMBINE Paid On for this EMI is blank/invalid, so not eligible."
+68134,4002,HEV-001073,combine_paid_on_missing_or_invalid,"COMBINE Paid On for this EMI is blank/invalid, so not eligible."
+68710,2653,HEV-UP-64,combine_paid_on_missing_or_invalid,"COMBINE Paid On for this EMI is blank/invalid, so not eligible."
+68711,2653,HEV-UP-64,combine_paid_on_missing_or_invalid,"COMBINE Paid On for this EMI is blank/invalid, so not eligible."

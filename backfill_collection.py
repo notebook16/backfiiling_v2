@@ -43,7 +43,7 @@ import re
 import sys
 from collections import Counter
 from dataclasses import dataclass
-from datetime import date, datetime, time
+from datetime import date, datetime, time, timezone
 from decimal import Decimal, InvalidOperation
 from pathlib import Path
 from typing import Any
@@ -62,7 +62,7 @@ DATA_DIR_ENV = "BACKFILL_DATA_DIR"
 FILES = {
     "db": ("db_sheet.xlsx", "Sheet1"),
     "los": ("LOS _Data.xlsx", "Sheet4"),
-    "combine": ("COMBINE-EMI-FOUR-ZONES.xlsx", "Sheet1"),
+    "combine": ("Merged-EMI'S.xlsx", "Sheet8"),
     # Row-level collection export (tenure, monthly_payable, collection_id, …). Use db_sheet if no separate file.
     "dp": ("db_sheet.xlsx", "Sheet1"),
 }
@@ -73,6 +73,7 @@ COL_DB_LOAN_ID = "loan_id"
 # LOS _Data.xlsx — export uses application_id (joins to collections.loan_id / application_id)
 COL_LOS_LOAN_ID = "application_id"
 COL_LOS_APP_NUMBER = "Application Number"
+COL_LOS_CUSTOMER_ID = "customer_id"
 
 # COMBINE tracker
 COL_CT_APP = "Application No."
@@ -136,7 +137,10 @@ TABLE_COLLECTIONS = "collections"
 # COMBINE: leading EMI group title cell, e.g. "EMI - 1" (spaces around dash)
 RE_EMI_GROUP_LABEL = re.compile(r"^EMI\s*-\s*(\d+)\s*$", re.IGNORECASE)
 SUB_PAID_ON = "Paid On"
+SUB_CASH_AMOUNT = "Cash Amount"
+SUB_ONLINE_AMOUNT = "Online Amount"
 SUB_TOTAL_AMOUNT = "Total Amount"
+SUB_COMMENTS = "Comments"
 SKIP_CLOSE_TYPES = {"recovered", "closed", "return"}
 
 
@@ -283,6 +287,39 @@ def note_all_pending_collections_for_loan(
                 )
 
 
+REASON_DESCRIPTIONS = {
+    "loan_not_in_LOS": "Loan ID exists in dp_sheet but is not present in LOS mapping.",
+    "no_COMBINE_for_loan": "No matching loan row found in COMBINE tracker for this loan.",
+    "no_db_sheet_rows_for_loan": "Loan is present in loan list but no dp_sheet rows were found for it.",
+    "combine_close_type_blocked": "Loan skipped because COMBINE CLOSE_TYPE is Recovered/Closed/Return.",
+    "dp_tenure_missing": "DP tenure value for the loan is missing or invalid.",
+    "dp_emi_outside_combine_tenure": "EMI in dp_sheet is outside COMBINE tenure range.",
+    "combine_paid_on_missing_or_invalid": "COMBINE Paid On for this EMI is blank/invalid, so not eligible.",
+    "combine_total_amount_not_usable": "COMBINE Total Amount is blank/NA/non-numeric for this EMI.",
+    "part_payment_not_handled": "Part payment subtype is intentionally skipped by policy.",
+    "center_id_manager_mapping_missing": "center_id has no configured user mapping for created_by/collector_id.",
+    "amount_mismatch_exact_required": "Exact match mode enabled; COMBINE Total Amount != due_amount.",
+    "extra_amount_exceeds_limit": "COMBINE Total Amount exceeds due_amount beyond configured cap.",
+    "shortfall_exceeds_limit": "COMBINE Total Amount is below due_amount beyond configured cap.",
+    "DB_collection_row_not_found_or_inactive": "collection_id not found in active DB records.",
+    "DB_status_not_PENDING": "DB status for collection_id is not PENDING.",
+    "UPDATE_rowcount_not_1": "DB update affected 0/multiple rows instead of exactly 1.",
+    "no_eligible_path_COMBINE_paid_on_missing_or_invalid_for_this_emi": (
+        "No eligible update path found (typically COMBINE Paid On missing/invalid for this EMI)."
+    ),
+}
+
+
+def describe_reason(reason: str) -> str:
+    parts = [p.strip() for p in cell_str(reason).split(";") if p.strip()]
+    if not parts:
+        return ""
+    descs: list[str] = []
+    for p in parts:
+        descs.append(REASON_DESCRIPTIONS.get(p, f"Reason '{p}' occurred."))
+    return " | ".join(descs)
+
+
 def write_cannot_update_collections_csv(
     path: Path,
     blocked: dict[int, dict[str, str]],
@@ -290,22 +327,24 @@ def write_cannot_update_collections_csv(
     logger: logging.Logger,
 ) -> None:
     """Write collection_id, loan_id, application_no, reason for rows not in would_update_ids."""
-    rows_out: list[tuple[int, str, str, str]] = []
+    rows_out: list[tuple[int, str, str, str, str]] = []
     for cid, rec in sorted(blocked.items(), key=lambda x: x[0]):
         if cid in would_update_ids:
             continue
+        reason = rec.get("reason", "")
         rows_out.append(
             (
                 cid,
                 rec.get("loan_id", ""),
                 rec.get("application_no", ""),
-                rec.get("reason", ""),
+                reason,
+                describe_reason(reason),
             )
         )
     path.parent.mkdir(parents=True, exist_ok=True)
     with path.open("w", encoding="utf-8", newline="") as f:
         w = csv.writer(f)
-        w.writerow(["collection_id", "loan_id", "application_no", "reason"])
+        w.writerow(["collection_id", "loan_id", "application_no", "reason", "reason desc"])
         w.writerows(rows_out)
     logger.info(
         "Checkpoint: cannot-update report %s (%s collection_id rows)",
@@ -355,7 +394,7 @@ def write_all_collection_ids_csv(
 
 def write_updated_collections_xlsx(
     path: Path,
-    rows: list[tuple[int, int, str, int, str]],
+    rows: list[tuple[int, int, str, int, str, str]],
     logger: logging.Logger,
 ) -> None:
     """Write updated/would-update collection rows to XLSX."""
@@ -369,6 +408,7 @@ def write_updated_collections_xlsx(
             "application_no",
             "emi_installment_no",
             "collection_subtype",
+            "due_amount",
         ]
     )
     for row in rows:
@@ -407,6 +447,219 @@ def write_amount_adjustments_xlsx(
     wb.save(str(path))
     wb.close()
     logger.info("Checkpoint: amount-adjustments xlsx %s (%s rows)", path.resolve(), len(rows))
+
+
+def paid_on_to_iso_timestamp(value: Any) -> str:
+    if isinstance(value, datetime):
+        dt = value
+    elif isinstance(value, date):
+        dt = datetime.combine(value, time.min)
+    elif isinstance(value, (int, float)):
+        dt = from_excel(float(value))
+        if isinstance(dt, date) and not isinstance(dt, datetime):
+            dt = datetime.combine(dt, time.min)
+    else:
+        return ""
+    if dt.tzinfo is None:
+        dt = dt.replace(tzinfo=timezone.utc)
+    return dt.isoformat()
+
+
+def write_phase2_collection_trans_csv(
+    path: Path,
+    trans_rows: list[tuple[Any, ...]],
+    logger: logging.Logger,
+) -> None:
+    headers = [
+        "trans_id",
+        "is_aggr_trans",
+        "org_id",
+        "center_id",
+        "collection_id",
+        "is_active",
+        "transaction_cd",
+        "trans_type",
+        "trans_subtype",
+        "mode",
+        "amount",
+        "recorded_by",
+        "scrap_type_id",
+        "recon_status",
+        "recon_by",
+        "recon_at",
+        "recon_comment",
+        "is_settled",
+        "from_user",
+        "from_customer",
+        "to_user",
+        "created_by",
+        "created_at",
+        "trans_comments",
+        "parent_trans_id",
+        "request_id",
+        "deposit_trans_ids",
+        "actual_created_at",
+    ]
+    path.parent.mkdir(parents=True, exist_ok=True)
+    with path.open("w", encoding="utf-8", newline="") as f:
+        w = csv.writer(f)
+        w.writerow(headers)
+        w.writerows(trans_rows)
+    logger.info(
+        "PHASE 2: collection_trans csv generated at %s (%s rows)",
+        path.resolve(),
+        len(trans_rows),
+    )
+
+
+def write_phase2_collection_comments_csv(
+    path: Path,
+    comment_rows: list[tuple[Any, ...]],
+    logger: logging.Logger,
+) -> None:
+    headers = [
+        "collection_comment_id",
+        "org_id",
+        "collection_id",
+        "is_called",
+        "comment",
+        "is_latest",
+        "created_by",
+        "created_at",
+    ]
+    path.parent.mkdir(parents=True, exist_ok=True)
+    with path.open("w", encoding="utf-8", newline="") as f:
+        w = csv.writer(f)
+        w.writerow(headers)
+        w.writerows(comment_rows)
+    logger.info(
+        "PHASE 2: collection_comments csv generated at %s (%s rows)",
+        path.resolve(),
+        len(comment_rows),
+    )
+
+
+def write_part1_tracker_analysis_xlsx(
+    path: Path,
+    dp_by_loan: dict[int, dict[int, list[DpEmiRow]]],
+    los: dict[int, str],
+    combine_by_app: dict[str, dict[str, Any]],
+    logger: logging.Logger,
+) -> None:
+    """
+    Build PART1-only tracker comparison output:
+      - Pending_PART1 sheet
+      - Done_PART1 sheet
+    is_paid_in_tracker=True only when:
+      - COMBINE Paid On for EMI-k is valid, and
+      - COMBINE Total Amount exactly equals PART1 due_amount.
+    """
+    pending_rows: list[tuple[int, int, str, str, str, bool, str, str, str, str, bool, bool]] = []
+    done_rows: list[tuple[int, int, str, str, str, bool, str, str, str, str, bool, bool]] = []
+    missing_or_unmatched: Counter[str] = Counter()
+
+    for loan_id in sorted(dp_by_loan.keys()):
+        app = los.get(loan_id)
+        app_key = normalize_app_number_key(app) if app else ""
+        cmb = combine_by_app.get(app_key) if app_key else None
+        for emi_no in sorted(dp_by_loan[loan_id].keys()):
+            for r in dp_by_loan[loan_id][emi_no]:
+                if dp_row_subtype_bucket(r.collection_sub_type) != "PART1":
+                    continue
+                status_up = cell_str(r.status).upper()
+                is_paid_in_tracker = False
+                is_amount_matched = False
+                paid_on_valid = False
+                tracker_amount = ""
+                due_amount = str(r.due_amount)
+                monthly_payble = str(r.monthly_payable)
+                amount_difference = ""
+                tracker_amount_non_zero_numeric = False
+                reason = ""
+                if cmb is None:
+                    reason = "missing_combine_for_loan"
+                else:
+                    paid_on_raw = cmb["paid_on"].get(emi_no)
+                    paid_on_valid = is_valid_paid_on(paid_on_raw)
+                    tot_raw = cmb["total"].get(emi_no)
+                    tot_dec = parse_combine_total_amount(tot_raw)
+                    if tot_dec is None:
+                        reason = "missing_or_invalid_combine_total_amount"
+                    else:
+                        tracker_amount = str(tot_dec)
+                        tracker_amount_non_zero_numeric = tot_dec != Decimal("0")
+                        diff = tot_dec - r.due_amount
+                        amount_difference = str(diff)
+                        is_amount_matched = tot_dec == r.due_amount
+                        is_paid_in_tracker = paid_on_valid and tracker_amount_non_zero_numeric
+                        if not paid_on_valid:
+                            reason = "paid_on_missing_or_invalid"
+                        elif not is_amount_matched:
+                            reason = "exact_amount_mismatch"
+
+                if reason:
+                    missing_or_unmatched[reason] += 1
+
+                out = (
+                    r.collection_id,
+                    loan_id,
+                    cell_str(app),
+                    cell_str(r.collection_sub_type),
+                    status_up,
+                    is_amount_matched,
+                    tracker_amount,
+                    due_amount,
+                    monthly_payble,
+                    amount_difference,
+                    paid_on_valid,
+                    is_paid_in_tracker,
+                )
+                if status_up == STATUS_PENDING:
+                    pending_rows.append(out)
+                elif status_up == STATUS_DONE:
+                    done_rows.append(out)
+
+    wb = Workbook()
+    ws_pending = wb.active
+    ws_pending.title = "Pending_PART1"
+    headers = [
+        "collection_id",
+        "loan_id",
+        "application_no",
+        "collection_sub_type",
+        "db_status",
+        "is_amount_matched",
+        "tracker_amount",
+        "collection_due_amount",
+        "monthly_payble",
+        "amount_difference",
+        "paid_on_valid",
+        "is_paid_in_tracker",
+    ]
+    ws_pending.append(headers)
+    for row in pending_rows:
+        ws_pending.append(list(row))
+
+    ws_done = wb.create_sheet("Done_PART1")
+    ws_done.append(headers)
+    for row in done_rows:
+        ws_done.append(list(row))
+
+    path.parent.mkdir(parents=True, exist_ok=True)
+    wb.save(str(path))
+    wb.close()
+
+    logger.info(
+        "Checkpoint: PART1 analysis xlsx %s (Pending_PART1=%s Done_PART1=%s)",
+        path.resolve(),
+        len(pending_rows),
+        len(done_rows),
+    )
+    logger.info(
+        "PART1 tracker compare summary: unmatched_or_missing=%s by_reason=%s",
+        sum(missing_or_unmatched.values()),
+        dict(missing_or_unmatched),
+    )
 
 
 def data_dir(logger: logging.Logger) -> Path:
@@ -747,6 +1000,36 @@ def load_los_mapping(logger: logging.Logger, base: Path) -> dict[int, str]:
     return out
 
 
+def load_los_customer_map(logger: logging.Logger, base: Path) -> dict[int, int]:
+    fn, sheet = FILES["los"]
+    ws, wb = load_worksheet(base / fn, sheet, logger)
+    try:
+        required = [COL_LOS_LOAN_ID, COL_LOS_CUSTOMER_ID]
+        hdr_row, col_map = find_header_row(ws, required, f"{fn}/{sheet} customer map", logger)
+        out: dict[int, int] = {}
+        for r in range(hdr_row + 1, (ws.max_row or hdr_row) + 1):
+            lid = parse_loan_id(
+                ws.cell(row=r, column=col_map[COL_LOS_LOAN_ID]).value,
+                f"LOS row{r} {COL_LOS_LOAN_ID}",
+                logger,
+            )
+            if lid is None:
+                continue
+            cust = parse_int_strict(
+                ws.cell(row=r, column=col_map[COL_LOS_CUSTOMER_ID]).value,
+                f"LOS row{r} {COL_LOS_CUSTOMER_ID}",
+                logger,
+            )
+            if cust is None:
+                continue
+            if lid not in out:
+                out[lid] = cust
+    finally:
+        wb.close()
+    logger.info("Checkpoint: LOS customer map size=%s (from %s)", len(out), fn)
+    return out
+
+
 def scan_combine_grouped_emis(header_row: int, ws, logger: logging.Logger) -> dict[int, dict[str, int]]:
     """
     COMBINE layout: header cells 'EMI - N' then 'Paid On', 'Cash Amount', 'Online Amount',
@@ -762,11 +1045,28 @@ def scan_combine_grouped_emis(header_row: int, ws, logger: logging.Logger) -> di
             continue
         k = int(m.group(1))
         pcol = normalize_key_header(ws.cell(row=header_row, column=c + 1).value)
+        ccol = normalize_key_header(ws.cell(row=header_row, column=c + 2).value)
+        ocol = normalize_key_header(ws.cell(row=header_row, column=c + 3).value)
         tcol = normalize_key_header(ws.cell(row=header_row, column=c + 4).value)
+        cmcol = normalize_key_header(ws.cell(row=header_row, column=c + 5).value)
         if pcol != normalize_key_header(SUB_PAID_ON):
             msg = (
                 f"HALT: COMBINE header row {header_row} col {c} {h!r}: "
                 f"expected next column {SUB_PAID_ON!r}, found {pcol!r}"
+            )
+            logger.error(msg)
+            raise RuntimeError(msg)
+        if ccol != normalize_key_header(SUB_CASH_AMOUNT):
+            msg = (
+                f"HALT: COMBINE header row {header_row} col {c} {h!r}: "
+                f"expected col+2 {SUB_CASH_AMOUNT!r}, found {ccol!r}"
+            )
+            logger.error(msg)
+            raise RuntimeError(msg)
+        if ocol != normalize_key_header(SUB_ONLINE_AMOUNT):
+            msg = (
+                f"HALT: COMBINE header row {header_row} col {c} {h!r}: "
+                f"expected col+3 {SUB_ONLINE_AMOUNT!r}, found {ocol!r}"
             )
             logger.error(msg)
             raise RuntimeError(msg)
@@ -777,10 +1077,17 @@ def scan_combine_grouped_emis(header_row: int, ws, logger: logging.Logger) -> di
             )
             logger.error(msg)
             raise RuntimeError(msg)
+        if cmcol != normalize_key_header(SUB_COMMENTS):
+            msg = (
+                f"HALT: COMBINE header row {header_row} col {c} {h!r}: "
+                f"expected col+5 {SUB_COMMENTS!r}, found {cmcol!r}"
+            )
+            logger.error(msg)
+            raise RuntimeError(msg)
         if k in out:
             logger.error("HALT: duplicate EMI block for k=%s in COMBINE header", k)
             raise RuntimeError("HALT: duplicate EMI block")
-        out[k] = {"emi_value": c, "paid_on": c + 1, "total": c + 4}
+        out[k] = {"emi_value": c, "paid_on": c + 1, "cash": c + 2, "online": c + 3, "total": c + 4, "comments": c + 5}
     if not out:
         logger.error(
             "HALT: no 'EMI - N' group headers (pattern %r) on row %s",
@@ -798,7 +1105,7 @@ def load_combine_rows(
     app_keys_filter: set[str] | None = None,
 ) -> dict[str, dict[str, Any]]:
     """
-    app_key -> app, tenure, emi, emi_map, emi_value{k}, paid_on{k}, total{k} (one workbook pass).
+    app_key -> app, tenure, emi, emi_map, emi_value{k}, paid_on{k}, cash{k}, online{k}, total{k}, comments{k}.
     """
     fn, sheet = FILES["combine"]
     path = base / fn
@@ -850,11 +1157,17 @@ def load_combine_rows(
                 continue
             emi_value: dict[int, Any] = {}
             paid_on: dict[int, Any] = {}
+            cash_amt: dict[int, Any] = {}
+            online_amt: dict[int, Any] = {}
             total_amt: dict[int, Any] = {}
+            comments: dict[int, Any] = {}
             for k in range(1, t + 1):
                 emi_value[k] = ws.cell(row=r, column=emi_map[k]["emi_value"]).value
                 paid_on[k] = ws.cell(row=r, column=emi_map[k]["paid_on"]).value
+                cash_amt[k] = ws.cell(row=r, column=emi_map[k]["cash"]).value
+                online_amt[k] = ws.cell(row=r, column=emi_map[k]["online"]).value
                 total_amt[k] = ws.cell(row=r, column=emi_map[k]["total"]).value
+                comments[k] = ws.cell(row=r, column=emi_map[k]["comments"]).value
             by_app_key[app_key] = {
                 "app": app,
                 "row": r,
@@ -864,7 +1177,10 @@ def load_combine_rows(
                 "emi_map": emi_map,
                 "emi_value": emi_value,
                 "paid_on": paid_on,
+                "cash": cash_amt,
+                "online": online_amt,
                 "total": total_amt,
+                "comments": comments,
             }
     finally:
         wb.close()
@@ -1146,7 +1462,7 @@ def primary_validate_excel_sources(logger: logging.Logger, base: Path) -> None:
         )
         find_header_row(
             ws,
-            [COL_LOS_LOAN_ID, COL_LOS_APP_NUMBER],
+            [COL_LOS_LOAN_ID, COL_LOS_APP_NUMBER, COL_LOS_CUSTOMER_ID],
             f"PRIMARY {fn}/{sh}",
             logger,
         )
@@ -1226,6 +1542,7 @@ def run_backfill(execute: bool, logger: logging.Logger) -> int:
 
     loan_ids = load_loan_ids(logger, base)
     los = load_los_mapping(logger, base)
+    los_customer = load_los_customer_map(logger, base)
 
     los_app_keys = {normalize_app_number_key(v) for v in los.values() if normalize_app_number_key(v)}
     combine_by_app = load_combine_rows(logger, base, los_app_keys)
@@ -1244,13 +1561,128 @@ def run_backfill(execute: bool, logger: logging.Logger) -> int:
     mismatch_reasons: Counter[str] = Counter()
     errors = 0
     would_update_collection_ids: set[int] = set()
-    updated_report_rows: list[tuple[int, int, str, int, str]] = []
+    updated_report_rows: list[tuple[int, int, str, int, str, str]] = []
     amount_adjustment_rows: list[tuple[int, int, str, int, str, str, str, str, str]] = []
+    trans_rows_phase2: list[tuple[Any, ...]] = []
+    comment_rows_phase2: list[tuple[Any, ...]] = []
+    next_trans_id = 15000
+    next_comment_id = 15000
     cannot_update_block: dict[int, dict[str, str]] = {}
     # Tenure gate: COMBINE Tenure == DP tenure only (no_of_actual_emis is informational)
     stats_reached_tenure_compare = 0
     stats_tenure_combine_eq_dp = 0
     stats_tenure_combine_ne_dp = 0
+
+    def append_phase2_rows_for_collection(
+        *,
+        dp: DpEmiRow,
+        loan_id: int,
+        emi_no: int,
+        manager_id: int,
+        cmb: dict[str, Any],
+        paid_on_value: Any,
+    ) -> None:
+        nonlocal next_trans_id, next_comment_id
+        created_at = paid_on_to_iso_timestamp(paid_on_value)
+        actual_created_at = datetime.now(timezone.utc).isoformat()
+        from_customer = los_customer.get(loan_id, "")
+        app_no_from_los = cell_str(los.get(loan_id, ""))
+        trans_comments = cell_str(cmb.get("app"))
+        center_id = dp.center_id
+        collection_id = dp.collection_id
+
+        cash_amount = parse_combine_total_amount(cmb["cash"].get(emi_no))
+        online_amount = parse_combine_total_amount(cmb["online"].get(emi_no))
+
+        if cash_amount is not None and cash_amount > 0:
+            trans_rows_phase2.append(
+                (
+                    next_trans_id,
+                    True,
+                    1,
+                    center_id,
+                    collection_id,
+                    True,
+                    "",
+                    "CREDIT",
+                    "RECORD_PAYMENT",
+                    "CASH",
+                    str(cash_amount),
+                    manager_id,
+                    0,
+                    "ACCEPTED",
+                    manager_id,
+                    created_at,
+                    "",
+                    True,
+                    0,
+                    from_customer,
+                    manager_id,
+                    manager_id,
+                    created_at,
+                    trans_comments,
+                    "",
+                    "",
+                    "",
+                    actual_created_at,
+                )
+            )
+            next_trans_id += 1
+
+        if online_amount is not None and online_amount > 0:
+            trans_rows_phase2.append(
+                (
+                    next_trans_id,
+                    True,
+                    1,
+                    center_id,
+                    collection_id,
+                    True,
+                    "DUMMYBC2",
+                    "CREDIT",
+                    "RECORD_PAYMENT",
+                    "UPI",
+                    str(online_amount),
+                    manager_id,
+                    0,
+                    "ACCEPTED",
+                    manager_id,
+                    created_at,
+                    "",
+                    True,
+                    0,
+                    from_customer,
+                    manager_id,
+                    manager_id,
+                    created_at,
+                    trans_comments,
+                    "",
+                    "",
+                    "",
+                    actual_created_at,
+                )
+            )
+            next_trans_id += 1
+
+        tracker_comment = cell_str(cmb["comments"].get(emi_no))
+        if tracker_comment:
+            if app_no_from_los:
+                comment_text = f"Application NO. {app_no_from_los} || {tracker_comment}"
+            else:
+                comment_text = tracker_comment
+            comment_rows_phase2.append(
+                (
+                    next_comment_id,
+                    1,
+                    collection_id,
+                    False,
+                    comment_text,
+                    False,
+                    manager_id,
+                    actual_created_at,
+                )
+            )
+            next_comment_id += 1
 
     try:
         for idx, loan_id in enumerate(loan_ids, 1):
@@ -1408,25 +1840,6 @@ def run_backfill(execute: bool, logger: logging.Logger) -> int:
                     skip_reasons["no_row_with_status_PENDING"] += 1
                     continue
 
-                if len(rows_k) > 1 and len(pending_rows) != len(rows_k):
-                    logger.warning(
-                        "SKIP: %s EMI-%s — %s dp rows but not all PENDING (mixed status)",
-                        ctx_base,
-                        k,
-                        len(rows_k),
-                    )
-                    skipped += 1
-                    skip_reasons["dp_rows_mixed_status_not_all_PENDING"] += 1
-                    for r in pending_rows:
-                        note_cannot_update_row(
-                            cannot_update_block,
-                            los,
-                            collection_id=r.collection_id,
-                            loan_id=loan_id,
-                            reason="dp_rows_mixed_status_not_all_PENDING",
-                        )
-                    continue
-
                 updated_any_in_emi = False
                 for dp in pending_rows:
                     if is_part_subtype(dp.collection_sub_type):
@@ -1516,7 +1929,16 @@ def run_backfill(execute: bool, logger: logging.Logger) -> int:
                                 cell_str(los.get(loan_id, "")),
                                 k,
                                 cell_str(dp.collection_sub_type),
+                                str(dp.due_amount),
                             )
+                        )
+                        append_phase2_rows_for_collection(
+                            dp=dp,
+                            loan_id=loan_id,
+                            emi_no=k,
+                            manager_id=manager_id,
+                            cmb=cmb,
+                            paid_on_value=po,
                         )
                         if fine_amount > 0 or discount_amount > 0:
                             amount_adjustment_rows.append(
@@ -1614,7 +2036,16 @@ def run_backfill(execute: bool, logger: logging.Logger) -> int:
                                 cell_str(los.get(loan_id, "")),
                                 k,
                                 cell_str(dp.collection_sub_type),
+                                str(dp.due_amount),
                             )
+                        )
+                        append_phase2_rows_for_collection(
+                            dp=dp,
+                            loan_id=loan_id,
+                            emi_no=k,
+                            manager_id=manager_id,
+                            cmb=cmb,
+                            paid_on_value=po,
                         )
                         if fine_amount > 0 or discount_amount > 0:
                             amount_adjustment_rows.append(
@@ -1686,49 +2117,101 @@ def run_backfill(execute: bool, logger: logging.Logger) -> int:
     write_updated_collections_xlsx(updated_xlsx_path, updated_report_rows, logger)
     amount_xlsx_path = base / f"amount_adjustments_{report_ts}.xlsx"
     write_amount_adjustments_xlsx(amount_xlsx_path, amount_adjustment_rows, logger)
+    part1_xlsx_path = base / f"part1_tracker_analysis_{report_ts}.xlsx"
+    write_part1_tracker_analysis_xlsx(part1_xlsx_path, dp_by_loan, los, combine_by_app, logger)
+    phase2_dir = base / "produced_sheets_phase_2"
+    logger.info("PHASE 2: preparing output sheets in %s", phase2_dir.resolve())
+    phase2_trans_path = phase2_dir / f"collection_trans_{report_ts}.csv"
+    write_phase2_collection_trans_csv(phase2_trans_path, trans_rows_phase2, logger)
+    phase2_comments_path = phase2_dir / f"collection_comments_{report_ts}.csv"
+    write_phase2_collection_comments_csv(phase2_comments_path, comment_rows_phase2, logger)
+    phase2_mode_counts: Counter[str] = Counter()
+    for tr in trans_rows_phase2:
+        # collection_trans column order: ... mode at index 9
+        mode = cell_str(tr[9]).upper()
+        if mode:
+            phase2_mode_counts[mode] += 1
+    phase2_trans_total = len(trans_rows_phase2)
+    phase2_comments_total = len(comment_rows_phase2)
+    phase2_total_rows = phase2_trans_total + phase2_comments_total
+    due_sum_updated = sum(Decimal(row[5]) for row in updated_report_rows)
+    trans_amount_sum = sum(Decimal(str(row[10])) for row in trans_rows_phase2)
+    due_vs_trans_match = due_sum_updated == trans_amount_sum
+
+    all_pending_collection_ids: set[int] = set()
+    target_pending_collection_ids: set[int] = set()
+    for emap in dp_by_loan.values():
+        for rows in emap.values():
+            for r in rows:
+                if cell_str(r.status).upper() != STATUS_PENDING:
+                    continue
+                all_pending_collection_ids.add(r.collection_id)
+                if not is_part_subtype(r.collection_sub_type):
+                    target_pending_collection_ids.add(r.collection_id)
+    updated_target_collection_ids = would_update_collection_ids & target_pending_collection_ids
+    skipped_target_pending_collections = max(0, len(target_pending_collection_ids) - len(updated_target_collection_ids))
+    skipped_all_pending_collections = max(0, len(all_pending_collection_ids) - len(would_update_collection_ids))
 
     dp_file = str(FILES["dp"])
-    logger.info("=== Summary: %s (collection export / dp_sheet) ===", dp_file)
+    logger.info("========== RUN SUMMARY ==========")
+    logger.info("Source: %s", dp_file)
     logger.info(
-        "Rows loaded from export (all collection rows on Sheet1): %s",
-        dp_total_rows,
+        "Mode: %s",
+        "EXECUTE (DB updated)" if execute else "DRY-RUN (no DB writes)",
     )
     logger.info(
-        "Distinct collection_id in %s: %s (each id = one row in export; PART1+PART2 EMI can use 2 ids)",
-        "successful updates" if execute else "would-update dry-run list",
+        "Input scope: total export rows=%s | pending(all)=%s | pending(target, non-part)=%s",
+        dp_total_rows,
+        len(all_pending_collection_ids),
+        len(target_pending_collection_ids),
+    )
+    logger.info(
+        "Result: %s=%s | unique collection_id=%s",
+        "updated" if execute else "would_update",
+        updated,
         len(would_update_collection_ids),
     )
     logger.info(
-        "UPDATE %s counting each collection row touched: %s",
-        "operations applied" if execute else "operations that would be applied",
-        updated,
+        "Pending skipped: target=%s | all_pending=%s",
+        skipped_target_pending_collections,
+        skipped_all_pending_collections,
     )
     export_rows_not_updated = max(0, dp_total_rows - len(would_update_collection_ids))
     logger.info(
-        "Export rows with no successful would-update in this run (approx.): %s "
-        "(= export rows %s − distinct ids would-update %s; see EMI-level skips below — not tenure sums)",
+        "Export rows not updated (approx): %s "
+        "(= %s - %s unique collection_id %s)",
         export_rows_not_updated,
         dp_total_rows,
         len(would_update_collection_ids),
+        "updated" if execute else "would_update",
     )
     logger.info(
-        "Loan-level skips (loans in db_sheet loan list that never enter EMI loop): %s — %s",
+        "Loan-level skips: %s | reasons=%s",
         mismatches,
         dict(mismatch_reasons),
     )
     logger.info(
-        "EMI-level skip events (can be >> export row count): total=%s — by_reason=%s",
+        "Collection/EMI skip decisions: total=%s | reasons=%s",
         skipped,
         dict(skip_reasons),
     )
     logger.info(
-        "Summary part payment: skipped part-payment rows (not handled by script)=%s",
+        "Part payment skipped (policy): %s",
         skip_reasons.get("part_payment_not_handled", 0),
     )
     logger.info(
-        "Skipped total %s is NOT a sum of tenures and NOT 'collections minus something'; "
-        "it counts each time an EMI payment path decided not to update (see by_reason).",
-        skipped,
+        "PHASE 2 summary: collection_trans=%s | by_mode=%s | collection_comments=%s | total_generated_rows=%s",
+        phase2_trans_total,
+        dict(phase2_mode_counts),
+        phase2_comments_total,
+        phase2_total_rows,
+    )
+    logger.info("---------- CHECKS ----------")
+    logger.info(
+        "Check due_vs_trans_amount: due_sum_from_updated_collections=%s | trans_amount_sum=%s | match=%s",
+        due_sum_updated,
+        trans_amount_sum,
+        due_vs_trans_match,
     )
     logger.info(
         "Errors (HALT paths): %s",
@@ -1745,6 +2228,7 @@ def run_backfill(execute: bool, logger: logging.Logger) -> int:
         "Note: no_of_actual_emis counts COMBINE EMI-k 'Paid On' cells with a date (including Excel serials "
         "in ~25k–80k). It is logged for audit only and does not block updates."
     )
+    logger.info("=================================")
     return 0
 
 
