@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 from __future__ import annotations
 
-from concurrent.futures import ThreadPoolExecutor, as_completed
+import time
+from decimal import Decimal
 from typing import Any
 
 from psycopg2.extras import RealDictCursor
@@ -19,37 +20,60 @@ from common import (
 )
 
 STAGE = "script_2_phase2_emi_creation"
+DONE_UPDATE_DELAY_SECONDS = 5.0
 
 
-def process_row(db: DbClient, row: dict[str, Any], execute: bool) -> tuple[str, dict[str, Any]]:
-    loan_id = row.get("loan_id")
-    app_id = row.get("application_id")
-    with db.conn() as conn:
-        with conn.cursor(cursor_factory=RealDictCursor) as cur:
-            cur.execute(
-                """
-                SELECT collection_id, collection_subtype, status
-                FROM collections
-                WHERE loan_id = %s AND is_active = true
-                ORDER BY collection_id
-                FOR UPDATE
-                """,
-                (loan_id,),
-            )
-            coll = cur.fetchall()
-            if len(coll) == 0:
-                return "failed", mandatory_failure_fields(loan_id, app_id, "no collections found", STAGE)
-            if len(coll) > 1:
-                return "multi_conflict", mandatory_failure_fields(loan_id, app_id, "multiple collections exist", STAGE)
-            item = coll[0]
-            if (item["collection_subtype"] or "").upper() != "DP":
-                return "skipped", mandatory_failure_fields(loan_id, app_id, "single collection is not DP", STAGE)
-            if execute:
-                cur.execute(
-                    "UPDATE collections SET status='DONE' WHERE collection_id=%s AND status='PENDING'",
-                    (item["collection_id"],),
-                )
-            return "updated", {"loan_id": loan_id, "application_id": app_id, "collection_id": item["collection_id"]}
+def _is_blank(value: Any) -> bool:
+    return value is None or str(value).strip() == ""
+
+
+def _normalize_token(value: Any) -> str:
+    return "" if _is_blank(value) else str(value).strip().upper()
+
+
+def _normalize_identifier(value: Any) -> str:
+    if _is_blank(value):
+        return ""
+    text = str(value).strip().replace(",", "")
+    try:
+        decimal_value = Decimal(text)
+    except Exception:  # noqa: BLE001
+        return str(value).strip()
+    if decimal_value == decimal_value.to_integral_value():
+        return str(int(decimal_value))
+    return str(decimal_value)
+
+
+def _failure_payload(row: dict[str, Any], reason: str) -> dict[str, Any]:
+    payload = mandatory_failure_fields(row.get("loan_id"), row.get("application_id"), reason, STAGE)
+    payload["application_no"] = row.get("application_no")
+    payload["phase"] = row.get("phase")
+    payload["dp_collection_id"] = row.get("dp_collection_id")
+    return payload
+
+
+def _skip_payload(row: dict[str, Any], reason: str) -> dict[str, Any]:
+    return {
+        "loan_id": row.get("loan_id"),
+        "application_id": row.get("application_id"),
+        "application_no": row.get("application_no"),
+        "phase": row.get("phase"),
+        "dp_collection_id": row.get("dp_collection_id"),
+        "reason": reason,
+    }
+
+
+def _fetch_collection(cur, collection_id: int) -> dict[str, Any] | None:
+    cur.execute(
+        """
+        SELECT collection_id, loan_id, collection_subtype, status, is_active
+        FROM collections
+        WHERE collection_id = %s
+        FOR UPDATE
+        """,
+        (collection_id,),
+    )
+    return cur.fetchone()
 
 
 def run() -> int:
@@ -61,7 +85,6 @@ def run() -> int:
     cp = CheckpointStore(STAGE, paths)
     input_file = paths.generated_sheets / "script_1" / args.input
     if not input_file.exists():
-        # fallback to source if user copied CLOSED_LOANS_DETAILS there directly
         input_file = paths.source_sheets / "CLOSED_LOANS_DETAILS.xlsx"
     rows = to_records(read_excel(input_file, 0))
     completed = cp.completed() if runtime.resume else set()
@@ -70,29 +93,98 @@ def run() -> int:
     skipped: list[dict[str, Any]] = []
     failed: list[dict[str, Any]] = []
     conflicts: list[dict[str, Any]] = []
+    prepared_rows: list[dict[str, Any]] = []
+    seen_keys: set[str] = set()
 
     db = DbClient(logger, maxconn=max(runtime.max_workers, 2))
     try:
-        with ThreadPoolExecutor(max_workers=runtime.max_workers) as ex:
-            future_map = {}
-            for row in rows:
-                key = str(row.get("loan_id"))
-                if key in completed:
-                    skipped.append({"loan_id": row.get("loan_id"), "application_id": row.get("application_id"), "reason": "already_processed"})
-                    continue
-                future_map[ex.submit(process_row, db, row, runtime.execute and not runtime.dry_run)] = (key, row)
-            for fut in as_completed(future_map):
-                key, row = future_map[fut]
-                bucket, payload = fut.result()
-                if bucket == "updated":
-                    updated.append(payload)
-                    cp.mark_completed(key)
-                elif bucket == "skipped":
-                    skipped.append(payload)
-                elif bucket == "failed":
-                    failed.append(payload)
-                else:
-                    conflicts.append(payload)
+        with db.conn() as conn:
+            with conn.cursor(cursor_factory=RealDictCursor) as cur:
+                for row in rows:
+                    phase = _normalize_token(row.get("phase"))
+                    if phase != "PHASE_2":
+                        skipped.append(_skip_payload(row, "non_phase_2"))
+                        continue
+
+                    collection_key = _normalize_identifier(row.get("dp_collection_id"))
+                    loan_id = _normalize_identifier(row.get("loan_id"))
+                    app_id = _normalize_identifier(row.get("application_id"))
+                    row["phase"] = phase
+                    row["loan_id"] = loan_id
+                    row["application_id"] = app_id
+                    row["dp_collection_id"] = collection_key
+
+                    key = collection_key or loan_id or app_id
+                    if not key:
+                        failed.append(_failure_payload(row, "missing dp_collection_id"))
+                        continue
+                    if key in completed:
+                        skipped.append(_skip_payload(row, "already_processed"))
+                        continue
+                    if key in seen_keys:
+                        conflicts.append(_failure_payload(row, "duplicate dp_collection_id in script_1 output"))
+                        continue
+                    seen_keys.add(key)
+
+                    if not collection_key:
+                        failed.append(_failure_payload(row, "missing dp_collection_id"))
+                        continue
+
+                    collection = _fetch_collection(cur, int(collection_key))
+                    if not collection:
+                        failed.append(_failure_payload(row, "dp_collection_id not found"))
+                        continue
+                    if not collection.get("is_active"):
+                        failed.append(_failure_payload(row, "dp_collection_id is inactive"))
+                        continue
+                    if _normalize_token(collection.get("collection_subtype")) != "DP":
+                        failed.append(_failure_payload(row, "dp_collection_id is not DP"))
+                        continue
+                    db_loan_id = _normalize_identifier(collection.get("loan_id"))
+                    if loan_id and db_loan_id and loan_id != db_loan_id:
+                        conflicts.append(_failure_payload(row, "dp_collection_id loan_id mismatch"))
+                        continue
+
+                    prepared_rows.append(
+                        {
+                            **row,
+                            "current_status": collection.get("status"),
+                        }
+                    )
+
+        if prepared_rows and runtime.execute and not runtime.dry_run:
+            collection_ids = [int(row["dp_collection_id"]) for row in prepared_rows]
+            with db.conn() as conn:
+                with conn.cursor() as cur:
+                    cur.execute(
+                        "UPDATE collections SET status='PENDING' WHERE collection_id = ANY(%s)",
+                        (collection_ids,),
+                    )
+            logger.info("set %s phase_2 dp collections to PENDING", len(prepared_rows))
+
+        for index, row in enumerate(prepared_rows):
+            payload = {
+                "loan_id": row.get("loan_id"),
+                "application_id": row.get("application_id"),
+                "application_no": row.get("application_no"),
+                "phase": row.get("phase"),
+                "dp_collection_id": row.get("dp_collection_id"),
+                "status_transition": "PENDING->DONE",
+            }
+            if runtime.execute and not runtime.dry_run:
+                if index > 0:
+                    time.sleep(DONE_UPDATE_DELAY_SECONDS)
+                with db.conn() as conn:
+                    with conn.cursor() as cur:
+                        cur.execute(
+                            "UPDATE collections SET status='DONE' WHERE collection_id=%s AND status='PENDING'",
+                            (int(row["dp_collection_id"]),),
+                        )
+                payload["executed"] = True
+            else:
+                payload["executed"] = False
+            updated.append(payload)
+            cp.mark_completed(row["dp_collection_id"])
     finally:
         db.close()
 

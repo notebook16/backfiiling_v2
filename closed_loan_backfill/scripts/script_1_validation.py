@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from datetime import timedelta
 from decimal import Decimal
-from typing import Any
+from typing import Any, Callable
 
 import pandas as pd
 
@@ -19,7 +19,9 @@ from common import (
 )
 
 STAGE = "script_1_validation"
-LEGACY_COLUMNS = {"loan_id", "application_id", "dp", "EMI", "tenure", "DP Date", "EMI-1 date"}
+DETAILS_TARGET_STATUSES = {"TARGET"}
+DETAILS_TARGET_PHASES = {"PHASE_2", "PHASE_3"}
+EXPECTED_TARGET_COUNT = 81
 
 
 def _is_blank(value: Any) -> bool:
@@ -46,6 +48,14 @@ def _clean_key(value: Any) -> str:
     return str(value).strip()
 
 
+def _normalize_token(value: Any) -> str:
+    return _clean_key(value).upper()
+
+
+def _is_true_flag(value: Any) -> bool:
+    return _normalize_token(value) == "TRUE"
+
+
 def _to_decimal(value: Any) -> Decimal | None:
     if _is_blank(value):
         return None
@@ -67,109 +77,145 @@ def _to_int(value: Any) -> int | None:
         return None
 
 
-def _index_by(records: list[dict[str, Any]], key: str) -> dict[str, dict[str, Any]]:
+def _normalize_identifier(value: Any) -> str:
+    if _is_blank(value):
+        return ""
+    decimal_value = _to_decimal(value)
+    if decimal_value is not None and decimal_value == decimal_value.to_integral_value():
+        return str(int(decimal_value))
+    return _clean_key(value)
+
+
+def _to_timestamp(value: Any) -> pd.Timestamp:
+    if _is_blank(value):
+        return pd.NaT
+    if isinstance(value, pd.Timestamp):
+        return value
+
+    text = str(value).strip().replace(",", "")
+    decimal_value = _to_decimal(text)
+    if decimal_value is not None:
+        try:
+            numeric = float(decimal_value)
+            if numeric > 20000:
+                return pd.Timestamp("1899-12-30") + pd.to_timedelta(numeric, unit="D")
+        except Exception:  # noqa: BLE001
+            pass
+    return pd.to_datetime(value, errors="coerce")
+
+
+def _index_by(
+    records: list[dict[str, Any]],
+    key: str,
+    *,
+    normalizer: Callable[[Any], str] | None = None,
+) -> dict[str, dict[str, Any]]:
     indexed: dict[str, dict[str, Any]] = {}
+    norm = normalizer or _clean_key
     for row in records:
-        row_key = _clean_key(row.get(key))
+        row_key = norm(row.get(key))
         if row_key and row_key not in indexed:
             indexed[row_key] = row
     return indexed
 
 
-def _group_by(records: list[dict[str, Any]], key: str) -> dict[str, list[dict[str, Any]]]:
-    grouped: dict[str, list[dict[str, Any]]] = {}
-    for row in records:
-        row_key = _clean_key(row.get(key))
-        if row_key:
-            grouped.setdefault(row_key, []).append(row)
-    return grouped
-
-
-def _resolve_tracker_sheet(tracker_path, requested_sheet: str) -> str:
-    sheet_names = pd.ExcelFile(tracker_path).sheet_names
-    if requested_sheet in sheet_names:
-        return requested_sheet
-    if requested_sheet == "CLOSED_LOAN_TRACKER" and "EMI" in sheet_names:
-        return "EMI"
-    raise ValueError(f"Worksheet named '{requested_sheet}' not found. Available sheets: {sheet_names}")
-
-
-def _pick_db_row(rows: list[dict[str, Any]], emi: Any, tenure: Any) -> dict[str, Any] | None:
-    if not rows:
-        return None
-    target_emi = _to_decimal(emi)
-    target_tenure = _to_int(tenure)
-    for row in rows:
-        row_emi = _to_decimal(_first_non_empty(row.get("monthly_payble"), row.get("monthly_payable")))
-        row_tenure = _to_int(_first_non_empty(row.get("emi_tenure"), row.get("tenure")))
-        if row_emi == target_emi and row_tenure == target_tenure:
-            return row
-    return rows[0]
-
-
-def _load_records(paths, requested_sheet: str) -> tuple[list[dict[str, Any]], str]:
+def _load_records(paths) -> list[dict[str, Any]]:
     tracker_path = paths.source_sheets / "CLOSED_LOAN_TRACKER.xlsx"
-    resolved_sheet = _resolve_tracker_sheet(tracker_path, requested_sheet)
-    tracker_df = read_excel(tracker_path, resolved_sheet)
-    if LEGACY_COLUMNS.issubset(set(tracker_df.columns)):
-        return to_records(tracker_df), resolved_sheet
+    details_path = paths.source_sheets / "CLOSED_LOANS_DETAILS.xlsx"
+    db_details_path = paths.source_sheets / "CLOSED_LOAN_DB_DETAILS.xlsx"
 
-    if resolved_sheet != "EMI":
+    emi_records = to_records(read_excel(tracker_path, "EMI"))
+    dp_records = to_records(read_excel(tracker_path, "DP"))
+    details_records = to_records(read_excel(details_path, 0))
+    db_detail_records = [
+        row
+        for row in to_records(read_excel(db_details_path, 0))
+        if _is_true_flag(row.get("is_valid"))
+    ]
+
+    emi_by_app = _index_by(emi_records, "Application No.")
+    dp_by_app = _index_by(dp_records, "Application No.")
+    db_by_loan_id = _index_by(
+        db_detail_records,
+        "loan_id",
+        normalizer=_normalize_identifier,
+    )
+
+    target_details = [
+        row
+        for row in details_records
+        if _normalize_token(row.get("implimentation_status")) in DETAILS_TARGET_STATUSES
+        and _normalize_token(row.get("phase")) in DETAILS_TARGET_PHASES
+    ]
+    if len(target_details) != EXPECTED_TARGET_COUNT:
         raise ValueError(
-            f"Sheet '{resolved_sheet}' uses the new split layout. Use sheet 'EMI' so the script can merge EMI and DP data."
+            "unexpected TARGET record count in CLOSED_LOANS_DETAILS: "
+            f"expected {EXPECTED_TARGET_COUNT}, found {len(target_details)}"
         )
 
-    details_df = read_excel(paths.source_sheets / "CLOSED_LOANS_DETAILS.xlsx", 0)
-    db_df = read_excel(paths.source_sheets / "DB_SHEET.xlsx", 0)
-
-    emi_records = to_records(tracker_df)
-    details_by_app = _index_by(to_records(details_df), "Application No.")
-    db_rows_by_app = _group_by(to_records(db_df), "expire_reason")
-
     normalized: list[dict[str, Any]] = []
-    for emi_row in emi_records:
-        app_no = _clean_key(emi_row.get("Application No."))
-        if not app_no:
-            continue
-
-        details_row = details_by_app.get(app_no, {})
-        db_rows = db_rows_by_app.get(app_no, [])
-        db_row = _pick_db_row(db_rows, emi_row.get("EMI"), emi_row.get("Tenure")) or {}
+    for details_row in target_details:
+        app_no = _clean_key(details_row.get("Application No."))
+        emi_row = emi_by_app.get(app_no, {})
+        dp_row = dp_by_app.get(app_no, {})
+        application_id = _normalize_identifier(details_row.get("application_id"))
+        installation_id = _normalize_identifier(details_row.get("installation_id"))
+        db_row = db_by_loan_id.get(application_id, {})
 
         normalized.append(
             {
                 **emi_row,
                 "application_no": app_no,
-                "loan_id": _first_non_empty(details_row.get("loan_id"), db_row.get("loan_id")),
-                "application_id": details_row.get("application_id"),
-                "loan_term_id": _first_non_empty(details_row.get("loan_term_id"), db_row.get("loan_term_id")),
+                "application_id": application_id,
+                "loan_term_id": details_row.get("loan_term_id"),
                 "customer_id": details_row.get("customer_id"),
-                "tenure": _first_non_empty(emi_row.get("Tenure"), details_row.get("Tenure")),
-                "EMI": _first_non_empty(emi_row.get("EMI"), details_row.get("EMI")),
-                "Installation Date": details_row.get("Installation Date"),
-                "EMI-1 date": emi_row.get("EMI - 1"),
-                "CLOSED_DATE": _first_non_empty(emi_row.get("CLOSE_DATE"), details_row.get("CLOSED DATE")),
-                "details_tenure": details_row.get("Tenure"),
-                "details_emi": details_row.get("EMI"),
-                "db_emi_tenure": _first_non_empty(db_row.get("emi_tenure"), db_row.get("tenure")),
-                "db_monthly_payable": _first_non_empty(db_row.get("monthly_payble"), db_row.get("monthly_payable")),
-                "db_match_count": len(db_rows),
+                "phase": _normalize_token(details_row.get("phase")),
+                "implimentation_status": _normalize_token(details_row.get("implimentation_status")),
+                "installation_id": _first_non_empty(installation_id, _normalize_identifier(db_row.get("installation_id"))),
+                "loan_id": db_row.get("loan_id"),
+                "close_status": _normalize_token(db_row.get("close_status")),
+                "db_dp_amt": db_row.get("dp_amt"),
+                "db_emi_amt": db_row.get("emi_amt"),
+                "db_installation_date": db_row.get("installation_date"),
+                "db_dp_count": db_row.get("dp_count"),
+                "db_emi_count": db_row.get("emi_count"),
+                "db_tenure": db_row.get("tenure"),
+                "dp_collection_id": db_row.get("dp_collection_id"),
+                "tracker_dp": dp_row.get("DP"),
+                "tracker_installation_date": _first_non_empty(
+                    emi_row.get("Installation Date"),
+                    details_row.get("Installation Date TRACKER"),
+                ),
+                "tracker_emi_1_date": emi_row.get("EMI - 1"),
+                "tracker_close_date": emi_row.get("CLOSE_DATE"),
             }
         )
 
-    return normalized, resolved_sheet
+    return normalized
+
+
+def _failure_payload(row: dict[str, Any], reason: str) -> dict[str, Any]:
+    payload = mandatory_failure_fields(row.get("loan_id"), row.get("application_id"), reason, STAGE)
+    payload["application_no"] = row.get("application_no")
+    payload["phase"] = row.get("phase")
+    payload["installation_id"] = row.get("installation_id")
+    return payload
+
+
+def _write_latest_success(base_dir, rows: list[dict[str, Any]], columns: list[str]) -> None:
+    output = base_dir / "script_1_validation_success_latest.xlsx"
+    pd.DataFrame(rows, columns=columns).to_excel(output, index=False)
 
 
 def run() -> int:
     parser = parse_common_args("Script 1 - Validation and eligibility checks")
-    parser.add_argument("--sheet", default="EMI")
     args = parser.parse_args()
     runtime, paths = runtime_from_args(args)
     logger = setup_logger(STAGE, paths)
     cp = CheckpointStore(STAGE, paths)
 
-    records, resolved_sheet = _load_records(paths, args.sheet)
-    logger.info("using tracker sheet: %s", resolved_sheet)
+    records = _load_records(paths)
+    logger.info("loaded TARGET validation records: %s", len(records))
     completed = cp.completed() if runtime.resume else set()
 
     success: list[dict[str, Any]] = []
@@ -181,75 +227,138 @@ def run() -> int:
     for row in records:
         loan_id = row.get("loan_id")
         app_id = row.get("application_id")
-        app_no = row.get("application_no") or row.get("Application No.")
-        key = _clean_key(_first_non_empty(loan_id, app_id, app_no))
+        app_no = row.get("application_no")
+        phase = row.get("phase")
+        key = _clean_key(_first_non_empty(app_no, app_id, loan_id))
 
         if not key:
-            failed.append(mandatory_failure_fields(loan_id, app_id, "missing identifiers", STAGE))
+            failed.append(_failure_payload(row, "missing identifiers"))
             continue
         if key in completed:
-            skipped.append({"loan_id": loan_id, "application_id": app_id, "reason": "already_processed"})
+            skipped.append(
+                {
+                    "loan_id": loan_id,
+                    "application_id": app_id,
+                    "application_no": app_no,
+                    "phase": phase,
+                    "reason": "already_processed",
+                }
+            )
             continue
         if key in seen_keys:
-            failed.append(mandatory_failure_fields(loan_id, app_id, "duplicate loan/application", STAGE))
+            failed.append(_failure_payload(row, "duplicate application"))
             continue
         seen_keys.add(key)
 
         if _is_blank(app_id):
-            failed.append(mandatory_failure_fields(loan_id, app_id, "loan missing in CLOSED_LOANS_DETAILS", STAGE))
+            failed.append(_failure_payload(row, "application missing in CLOSED_LOANS_DETAILS"))
+            continue
+        if _is_blank(app_no):
+            failed.append(_failure_payload(row, "application missing in CLOSED_LOAN_TRACKER EMI"))
+            continue
+        if _normalize_token(row.get("implimentation_status")) not in DETAILS_TARGET_STATUSES:
+            skipped.append(
+                {
+                    "loan_id": loan_id,
+                    "application_id": app_id,
+                    "application_no": app_no,
+                    "phase": phase,
+                    "reason": "non_target_status",
+                }
+            )
+            continue
+        if phase not in DETAILS_TARGET_PHASES:
+            manual.append(_failure_payload(row, f"unsupported phase {phase or 'BLANK'}"))
+            continue
+        if _is_blank(row.get("EMI")) or _is_blank(row.get("Tenure")):
+            manual.append(_failure_payload(row, "missing EMI or tenure in CLOSED_LOAN_TRACKER EMI"))
             continue
         if _is_blank(loan_id):
-            failed.append(mandatory_failure_fields(loan_id, app_id, "loan missing in DB_SHEET", STAGE))
+            manual.append(_failure_payload(row, "missing match in CLOSED_LOAN_DB_DETAILS via application_id/loan_id"))
             continue
 
-        tracker_tenure = _to_int(row.get("tenure"))
-        details_tenure = _to_int(row.get("details_tenure"))
-        if tracker_tenure is None or details_tenure is None:
-            manual.append(mandatory_failure_fields(loan_id, app_id, "missing tenure for validation", STAGE))
+        tracker_tenure = _to_int(row.get("Tenure"))
+        db_tenure = _to_int(row.get("db_tenure"))
+        if tracker_tenure is None or db_tenure is None:
+            manual.append(_failure_payload(row, "missing tenure for validation"))
             continue
-        if tracker_tenure != details_tenure:
-            failed.append(mandatory_failure_fields(loan_id, app_id, "tenure mismatch", STAGE))
+        if tracker_tenure != db_tenure:
+            failed.append(_failure_payload(row, "tenure mismatch"))
             continue
 
         tracker_emi = _to_decimal(row.get("EMI"))
-        details_emi = _to_decimal(row.get("details_emi"))
-        if tracker_emi is None or details_emi is None:
-            manual.append(mandatory_failure_fields(loan_id, app_id, "missing EMI for validation", STAGE))
+        db_emi = _to_decimal(row.get("db_emi_amt"))
+        if tracker_emi is None or db_emi is None:
+            manual.append(_failure_payload(row, "missing EMI for validation"))
             continue
-        if tracker_emi != details_emi:
-            failed.append(mandatory_failure_fields(loan_id, app_id, "EMI mismatch", STAGE))
-            continue
-
-        db_tenure = _to_int(row.get("db_emi_tenure"))
-        if db_tenure not in (None, 0) and tracker_tenure != db_tenure:
-            failed.append(mandatory_failure_fields(loan_id, app_id, "tenure mismatch in DB_SHEET", STAGE))
+        if tracker_emi != db_emi:
+            failed.append(_failure_payload(row, "EMI mismatch"))
             continue
 
-        db_emi = _to_decimal(row.get("db_monthly_payable"))
-        if db_emi not in (None, Decimal("0")) and tracker_emi != db_emi:
-            failed.append(mandatory_failure_fields(loan_id, app_id, "EMI mismatch in DB_SHEET", STAGE))
+        db_installation_date = _to_timestamp(row.get("db_installation_date"))
+        if pd.isna(db_installation_date):
+            manual.append(_failure_payload(row, "missing installation date for validation"))
             continue
 
-        installation_date = pd.to_datetime(row.get("Installation Date"), errors="coerce")
-        emi1 = pd.to_datetime(row.get("EMI-1 date"), errors="coerce")
-        if pd.isna(installation_date) or pd.isna(emi1):
-            manual.append(mandatory_failure_fields(loan_id, app_id, "missing installation/EMI-1 date", STAGE))
+        emi1 = _to_timestamp(row.get("tracker_emi_1_date"))
+        tracker_installation_date = _to_timestamp(row.get("tracker_installation_date"))
+        expected_emi1 = (db_installation_date + pd.DateOffset(months=1) + timedelta(days=1)).normalize()
+        emi1_matches = not pd.isna(emi1) and emi1.normalize() == expected_emi1
+        installation_date_matches = (
+            not pd.isna(tracker_installation_date)
+            and tracker_installation_date.normalize() == db_installation_date.normalize()
+        )
+        if not emi1_matches and not installation_date_matches:
+            if pd.isna(emi1) and pd.isna(tracker_installation_date):
+                manual.append(_failure_payload(row, "missing EMI-1 and Installation Date"))
+            else:
+                failed.append(_failure_payload(row, "EMI-1 and Installation Date validation failed"))
             continue
-        expected_emi1 = (installation_date + pd.DateOffset(months=1) + timedelta(days=1)).normalize()
-        if emi1.normalize() != expected_emi1:
-            failed.append(mandatory_failure_fields(loan_id, app_id, "invalid EMI-1 date", STAGE))
+
+        tracker_dp = _to_decimal(row.get("tracker_dp"))
+        db_dp = _to_decimal(row.get("db_dp_amt"))
+        if tracker_dp is None or db_dp is None:
+            manual.append(_failure_payload(row, "missing DP for validation"))
             continue
+        if tracker_dp != db_dp:
+            failed.append(_failure_payload(row, "DP mismatch"))
+            continue
+
+        if phase == "PHASE_2":
+            if _normalize_token(row.get("close_status")) != "PENDING":
+                failed.append(_failure_payload(row, "PHASE_2 close_status must be PENDING"))
+                continue
+            emi_count = _to_int(row.get("db_emi_count"))
+            if emi_count is None:
+                manual.append(_failure_payload(row, "missing emi_count for PHASE_2 validation"))
+                continue
+            if emi_count != 0:
+                failed.append(_failure_payload(row, "PHASE_2 emi_count must be 0"))
+                continue
+        elif phase == "PHASE_3":
+            dp_count = _to_int(row.get("db_dp_count"))
+            emi_count = _to_int(row.get("db_emi_count"))
+            if dp_count is None or emi_count is None:
+                manual.append(_failure_payload(row, "missing DP/EMI counts for PHASE_3 validation"))
+                continue
+            if dp_count <= 0 or emi_count <= 0:
+                failed.append(_failure_payload(row, "PHASE_3 requires dp_count > 0 and emi_count > 0"))
+                continue
 
         row["backfill_stage"] = "validated"
         success.append(row)
         cp.mark_completed(key)
 
+    output_dir = paths.generated_sheets / "script_1"
+    success_columns = list(records[0].keys()) + ["backfill_stage"] if records else ["backfill_stage"]
     out = write_audit_xlsx(
-        paths.generated_sheets / "script_1",
+        output_dir,
         "script_1_validation",
         {"success": success, "failed": failed, "skipped": skipped, "manual_intervention": manual},
     )
+    _write_latest_success(output_dir, success, success_columns)
     logger.info("audit files: %s", out)
+    logger.info("latest success file: %s", output_dir / "script_1_validation_success_latest.xlsx")
     return 0 if not failed else 2
 
 
