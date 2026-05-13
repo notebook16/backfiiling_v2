@@ -3,7 +3,6 @@ from __future__ import annotations
 
 import json
 import re
-import time
 from datetime import datetime, timedelta, timezone
 from decimal import Decimal
 from pathlib import Path
@@ -30,7 +29,6 @@ STAGE = "script_4_settlement_creation"
 DEFAULT_INPUT = "script_3_backfill_success_latest.xlsx"
 COLLECTION_START_ID = 35000
 TRANS_START_ID = 35000
-DONE_GAP_SECONDS = 10
 
 CENTER_MANAGER_TO_CENTER_IDS = {
     1072: [2],
@@ -328,7 +326,7 @@ def run() -> int:
                         "follow_up_date": None,
                         "last_call": None,
                         "due_date": datetime(5000, 1, 1, 5, 30, 0, tzinfo=timezone(timedelta(hours=5, minutes=30))),
-                        "status": "PENDING",
+                        "status": "DONE",
                         "expire_reason": app_no,
                         "info": {"request_id": 0, "request_type": request_type},
                         "parent_id": None,
@@ -385,7 +383,7 @@ def run() -> int:
                             "application_id": app_id,
                             "collection_id": next_collection_id,
                             "settlement_amount": str(settlement_amount),
-                            "collection_status_initial": "PENDING",
+                            "collection_status_initial": "DONE",
                             "trigger_applied": False,
                             "close_status_after_done": "",
                             "collection_trans_created": settlement_amount > 0,
@@ -406,6 +404,27 @@ def run() -> int:
                 if execute_mode and not critical_failure:
                     collection_rows_for_import = to_records(read_excel(collections_sheet, 0))
                     trans_rows_for_import = to_records(read_excel(trans_sheet, 0))
+                    loan_ids = [int(row["loan_id"]) for row in success]
+                    status_rows: dict[int, str] = {}
+                    if loan_ids:
+                        cur.execute(
+                            """
+                            SELECT application_id, close_status
+                            FROM loan_applications
+                            WHERE application_id = ANY(%s)
+                            """,
+                            (loan_ids,),
+                        )
+                        status_rows = {int(row["application_id"]): _clean_key(row["close_status"]) for row in cur.fetchall()}
+
+                    non_pending_loan_ids = [
+                        loan_id for loan_id in loan_ids if status_rows.get(loan_id, "").upper() != "PENDING"
+                    ]
+                    if non_pending_loan_ids:
+                        raise RuntimeError(
+                            "loan_applications.close_status must be PENDING before script_4 import; "
+                            f"non_pending_loan_ids={sorted(set(non_pending_loan_ids))}"
+                        )
 
                     for coll in collection_rows_for_import:
                         info_payload = coll.get("info")
@@ -455,39 +474,14 @@ def run() -> int:
                             trans,
                         )
 
-                    for idx, coll in enumerate(staged_collections, start=1):
-                        cur.execute(
-                            "UPDATE collections SET status='DONE' WHERE collection_id=%s AND status='PENDING'",
-                            (coll["collection_id"],),
-                        )
-                        if idx < len(staged_collections):
-                            conn.commit()
-                            time.sleep(DONE_GAP_SECONDS)
-
-                    loan_ids = [row["loan_id"] for row in success]
-                    if loan_ids:
-                        cur.execute(
-                            """
-                            SELECT application_id, close_status
-                            FROM loan_applications
-                            WHERE application_id = ANY(%s)
-                            """,
-                            (loan_ids,),
-                        )
-                        status_rows = {int(row["application_id"]): _clean_key(row["close_status"]) for row in cur.fetchall()}
-                    else:
-                        status_rows = {}
-
                     applied_loan_ids: list[int] = []
                     for row in success:
                         close_status = status_rows.get(int(row["loan_id"]), "")
-                        applied = close_status.upper() != "PENDING" and close_status != ""
-                        row["trigger_applied"] = applied
+                        row["trigger_applied"] = close_status.upper() == "PENDING"
                         row["close_status_after_done"] = close_status
-                        row["reason"] = "applied" if applied else "pending_or_missing"
-                        if applied:
-                            applied_loan_ids.append(int(row["loan_id"]))
-                            cp.mark_completed(str(row["loan_id"]))
+                        row["reason"] = "imported_close_status_pending"
+                        applied_loan_ids.append(int(row["loan_id"]))
+                        cp.mark_completed(str(row["loan_id"]))
 
                     next_script_file = paths.generated_sheets / "script_4" / "script_4_next_script_loan_ids_latest.xlsx"
                     pd.DataFrame([{"loan_id": loan_id} for loan_id in sorted(set(applied_loan_ids))]).to_excel(
