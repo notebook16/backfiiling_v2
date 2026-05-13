@@ -71,6 +71,36 @@ def setup_logger(stage: str, paths: Paths) -> logging.Logger:
     return logger
 
 
+def load_env_file(path: Path, logger: logging.Logger | None = None) -> int:
+    if not path.is_file():
+        if logger:
+            logger.info("env file not found at %s; continuing with current environment", path)
+        return 0
+
+    loaded = 0
+    for raw_line in path.read_text(encoding="utf-8").splitlines():
+        line = raw_line.strip()
+        if not line or line.startswith("#"):
+            continue
+        if line.startswith("export "):
+            line = line[7:].strip()
+        if "=" not in line:
+            continue
+        key, value = line.split("=", 1)
+        key = key.strip()
+        value = value.strip()
+        if not key:
+            continue
+        if len(value) >= 2 and value[0] == value[-1] and value[0] in {"'", '"'}:
+            value = value[1:-1]
+        os.environ[key] = value
+        loaded += 1
+
+    if logger:
+        logger.info("loaded %s env vars from %s", loaded, path)
+    return loaded
+
+
 def parse_common_args(description: str) -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description=description)
     parser.add_argument("--execute", action="store_true", help="Enable DB writes")
@@ -139,6 +169,42 @@ def write_audit_xlsx(base_dir: Path, prefix: str, buckets: dict[str, list[dict[s
         pd.DataFrame(rows).to_excel(output, index=False)
         out_paths[bucket] = output
     return out_paths
+
+
+def count_reasons(
+    rows: Iterable[dict[str, Any]],
+    *field_names: str,
+) -> dict[str, int]:
+    counts: dict[str, int] = {}
+    for row in rows:
+        reason = ""
+        for field_name in field_names:
+            value = row.get(field_name)
+            if value is not None and str(value).strip():
+                reason = str(value).strip()
+                break
+        if not reason:
+            reason = "unknown"
+        counts[reason] = counts.get(reason, 0) + 1
+    return dict(sorted(counts.items(), key=lambda item: (-item[1], item[0])))
+
+
+def log_stage_summary(
+    logger: logging.Logger,
+    stage: str,
+    *,
+    loaded: int | None = None,
+    buckets: dict[str, list[dict[str, Any]]],
+    reason_fields_by_bucket: dict[str, tuple[str, ...]] | None = None,
+) -> None:
+    logger.info("=== %s summary ===", stage)
+    if loaded is not None:
+        logger.info("loaded records: %s", loaded)
+    for bucket_name, rows in buckets.items():
+        logger.info("%s count: %s", bucket_name, len(rows))
+        fields = (reason_fields_by_bucket or {}).get(bucket_name, ())
+        if fields and rows:
+            logger.info("%s by reason: %s", bucket_name, count_reasons(rows, *fields))
 
 
 class CheckpointStore:

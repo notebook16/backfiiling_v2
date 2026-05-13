@@ -31,14 +31,6 @@ def parse_args() -> argparse.Namespace:
     return parser.parse_args()
 
 
-def summary_from_code(code: int) -> tuple[int, int, int]:
-    if code == 0:
-        return (1, 1, 0)
-    if code == 2:
-        return (1, 0, 1)
-    return (1, 0, 0)
-
-
 def main() -> int:
     args = parse_args()
     script_dir = Path(__file__).resolve().parent
@@ -55,12 +47,13 @@ def main() -> int:
 
     for script_name, label in SCRIPTS:
         code = run_script(script_dir, script_name, passthrough)
-        total, success, fail = summary_from_code(code)
         print(f"\n{label} summary")
-        print(f"total processed: {total}")
-        print(f"success count: {success}")
-        print(f"failure count: {fail}")
-        print("skipped count: check generated XLSX for exact number")
+        if code == 0:
+            print("stage result: completed without hard failures")
+        elif code == 2:
+            print("stage result: completed with validation/business-rule failures")
+        else:
+            print(f"stage result: unexpected failure (exit code {code})")
         if code not in (0, 2):
             print("Script failed unexpectedly, stopping pipeline.")
             return code

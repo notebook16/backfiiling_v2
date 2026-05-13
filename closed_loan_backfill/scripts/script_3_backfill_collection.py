@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 import csv
-import os
 from contextlib import nullcontext
 from datetime import date, datetime, time, timezone
 from decimal import Decimal, InvalidOperation
@@ -15,6 +14,8 @@ from psycopg2.extras import RealDictCursor
 from common import (
     CheckpointStore,
     DbClient,
+    load_env_file,
+    log_stage_summary,
     mandatory_failure_fields,
     parse_common_args,
     read_excel,
@@ -28,7 +29,7 @@ STAGE = "script_3_backfill_collection"
 DEFAULT_INPUT = "script_1_validation_success_latest.xlsx"
 DB_SHEET_NAME = "DB_SHEET.xlsx"
 LOS_DATA_NAME = "LOS _Data.xlsx"
-TARGET_PHASE = "PHASE_3"
+TARGET_PHASES = {"PHASE_2", "PHASE_3"}
 STATUS_PENDING = "PENDING"
 STATUS_DONE = "DONE"
 PHASE2_DIR_NAME = "produced_sheets_phase_2"
@@ -53,31 +54,6 @@ CENTER_MANAGER_TO_CENTER_IDS = {
 
 def _run_ts() -> str:
     return datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S")
-
-
-def _load_env_file(logger, path: Path) -> None:
-    if not path.is_file():
-        logger.info("env file not found at %s; continuing with current environment", path)
-        return
-    loaded = 0
-    for raw_line in path.read_text(encoding="utf-8").splitlines():
-        line = raw_line.strip()
-        if not line or line.startswith("#"):
-            continue
-        if line.startswith("export "):
-            line = line[7:].strip()
-        if "=" not in line:
-            continue
-        key, value = line.split("=", 1)
-        key = key.strip()
-        value = value.strip()
-        if not key:
-            continue
-        if len(value) >= 2 and value[0] == value[-1] and value[0] in {"'", '"'}:
-            value = value[1:-1]
-        os.environ[key] = value
-        loaded += 1
-    logger.info("loaded %s env vars from %s", loaded, path)
 
 
 def _is_blank(value: Any) -> bool:
@@ -405,7 +381,7 @@ def run() -> int:
     runtime, paths = runtime_from_args(args)
     logger = setup_logger(STAGE, paths)
     cp = CheckpointStore(STAGE, paths)
-    _load_env_file(logger, paths.root.parent / ".env")
+    load_env_file(paths.root.parent / ".env", logger)
 
     output_dir = paths.generated_sheets / "script_3"
     phase2_dir = output_dir / PHASE2_DIR_NAME
@@ -452,8 +428,8 @@ def run() -> int:
             db_cursor = conn.cursor() if conn is not None else None
             for row in tracker_rows:
                 phase = _normalize_token(row.get("phase"))
-                if phase and phase != TARGET_PHASE:
-                    skipped.append(_skip_payload(row, "non_phase_3"))
+                if phase and phase not in TARGET_PHASES:
+                    skipped.append(_skip_payload(row, "non_script_3_phase"))
                     continue
 
                 loan_id = _normalize_identifier(row.get("loan_id"))
@@ -530,16 +506,9 @@ def run() -> int:
                         continue
 
                     status = _normalize_token(db_row.get("status"))
+                    # Out of scope: script_3 only handles PENDING -> DONE.
+                    # Non-PENDING rows are ignored and not treated as cannot-update blockers.
                     if status != STATUS_PENDING:
-                        _note_cannot_update(
-                            blocked_by_collection,
-                            collection_id=collection_id,
-                            loan_id=loan_id,
-                            application_no=los_app or application_no,
-                            reason="db_status_not_pending",
-                        )
-                        row_blocked_ids.append(collection_id)
-                        row_block_reasons.append("db_status_not_pending")
                         continue
 
                     if _is_part_subtype(db_row.get("collection_subtype")):
@@ -906,6 +875,28 @@ def run() -> int:
         output_dir,
         "script_3_backfill",
         {"success": success, "failed": failed, "skipped": skipped, "manual_intervention": manual},
+    )
+    log_stage_summary(
+        logger,
+        "script_3_backfill_collection",
+        loaded=len(tracker_rows),
+        buckets={
+            "success": success,
+            "failed": failed,
+            "skipped": skipped,
+            "manual_intervention": manual,
+            "updated_collections": updated_collection_rows,
+            "phase2_collection_trans": [{"mode": row[9]} for row in phase2_trans_rows],
+            "phase2_collection_comments": [{"generated": True} for _ in phase2_comment_rows],
+        },
+        reason_fields_by_bucket={
+            "failed": ("failure_reason",),
+            "skipped": ("reason",),
+            "manual_intervention": ("failure_reason",),
+            "success": ("backfill_result",),
+            "updated_collections": ("status_after",),
+            "phase2_collection_trans": ("mode",),
+        },
     )
     logger.info("audit files: %s", out)
     logger.info(

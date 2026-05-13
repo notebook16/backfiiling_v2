@@ -10,6 +10,8 @@ from psycopg2.extras import RealDictCursor
 from common import (
     CheckpointStore,
     DbClient,
+    load_env_file,
+    log_stage_summary,
     mandatory_failure_fields,
     parse_common_args,
     read_excel,
@@ -66,7 +68,7 @@ def _skip_payload(row: dict[str, Any], reason: str) -> dict[str, Any]:
 def _fetch_collection(cur, collection_id: int) -> dict[str, Any] | None:
     cur.execute(
         """
-        SELECT collection_id, loan_id, collection_subtype, status, is_active
+        SELECT collection_id, loan_id, collection_type, collection_subtype, status, is_active
         FROM collections
         WHERE collection_id = %s
         FOR UPDATE
@@ -82,6 +84,7 @@ def run() -> int:
     args = parser.parse_args()
     runtime, paths = runtime_from_args(args)
     logger = setup_logger(STAGE, paths)
+    load_env_file(paths.root.parent / ".env", logger)
     cp = CheckpointStore(STAGE, paths)
     input_file = paths.generated_sheets / "script_1" / args.input
     if not input_file.exists():
@@ -101,6 +104,13 @@ def run() -> int:
         with db.conn() as conn:
             with conn.cursor(cursor_factory=RealDictCursor) as cur:
                 for row in rows:
+                    logger.info(
+                        "processing input row: raw_loan_id=%s raw_application_id=%s raw_dp_collection_id=%s raw_phase=%s",
+                        row.get("loan_id"),
+                        row.get("application_id"),
+                        row.get("dp_collection_id"),
+                        row.get("phase"),
+                    )
                     phase = _normalize_token(row.get("phase"))
                     if phase != "PHASE_2":
                         skipped.append(_skip_payload(row, "non_phase_2"))
@@ -137,13 +147,21 @@ def run() -> int:
                     if not collection.get("is_active"):
                         failed.append(_failure_payload(row, "dp_collection_id is inactive"))
                         continue
-                    if _normalize_token(collection.get("collection_subtype")) != "DP":
-                        failed.append(_failure_payload(row, "dp_collection_id is not DP"))
+                    if _normalize_token(collection.get("collection_type")) != "DP":
+                        failed.append(_failure_payload(row, "dp_collection_id collection_type is not DP"))
                         continue
                     db_loan_id = _normalize_identifier(collection.get("loan_id"))
                     if loan_id and db_loan_id and loan_id != db_loan_id:
                         conflicts.append(_failure_payload(row, "dp_collection_id loan_id mismatch"))
                         continue
+
+                    logger.info(
+                        "row prepared for phase_2: loan_id=%s application_id=%s dp_collection_id=%s current_status=%s",
+                        loan_id,
+                        app_id,
+                        collection_key,
+                        collection.get("status"),
+                    )
 
                     prepared_rows.append(
                         {
@@ -154,6 +172,11 @@ def run() -> int:
 
         if prepared_rows and runtime.execute and not runtime.dry_run:
             collection_ids = [int(row["dp_collection_id"]) for row in prepared_rows]
+            logger.info(
+                "updating collections to PENDING for %s records: collection_ids=%s",
+                len(collection_ids),
+                collection_ids,
+            )
             with db.conn() as conn:
                 with conn.cursor() as cur:
                     cur.execute(
@@ -174,6 +197,13 @@ def run() -> int:
             if runtime.execute and not runtime.dry_run:
                 if index > 0:
                     time.sleep(DONE_UPDATE_DELAY_SECONDS)
+                logger.info(
+                    "updating collection to DONE (PENDING->DONE): index=%s loan_id=%s application_id=%s dp_collection_id=%s",
+                    index,
+                    row.get("loan_id"),
+                    row.get("application_id"),
+                    row.get("dp_collection_id"),
+                )
                 with db.conn() as conn:
                     with conn.cursor() as cur:
                         cur.execute(
@@ -192,6 +222,22 @@ def run() -> int:
         paths.generated_sheets / "script_2",
         "script_2_phase2",
         {"updated": updated, "skipped": skipped, "failed": failed, "multi_collection_conflict": conflicts},
+    )
+    log_stage_summary(
+        logger,
+        "script_2_phase2_emi_creation",
+        loaded=len(rows),
+        buckets={
+            "updated": updated,
+            "skipped": skipped,
+            "failed": failed,
+            "multi_collection_conflict": conflicts,
+        },
+        reason_fields_by_bucket={
+            "skipped": ("reason",),
+            "failed": ("failure_reason",),
+            "multi_collection_conflict": ("failure_reason",),
+        },
     )
     logger.info("audit files: %s", out)
     return 0 if not failed else 2

@@ -8,6 +8,8 @@ import pandas as pd
 from common import (
     CheckpointStore,
     DbClient,
+    load_env_file,
+    log_stage_summary,
     mandatory_failure_fields,
     parse_common_args,
     read_excel,
@@ -26,6 +28,7 @@ def run() -> int:
     args = parser.parse_args()
     runtime, paths = runtime_from_args(args)
     logger = setup_logger(STAGE, paths)
+    load_env_file(paths.root.parent / ".env", logger)
     cp = CheckpointStore(STAGE, paths)
 
     rows = to_records(read_excel(paths.source_sheets / args.input, 0))
@@ -66,6 +69,20 @@ def run() -> int:
         paths.generated_sheets / "script_5",
         "script_5_final_status",
         {"success": success, "failed": failed, "skipped": skipped},
+    )
+    log_stage_summary(
+        logger,
+        "script_5_collection_status_update",
+        loaded=len(rows),
+        buckets={
+            "success": success,
+            "failed": failed,
+            "skipped": skipped,
+        },
+        reason_fields_by_bucket={
+            "failed": ("failure_reason",),
+            "skipped": ("reason",),
+        },
     )
     logger.info("audit files: %s", out)
     return 0 if not failed else 2
