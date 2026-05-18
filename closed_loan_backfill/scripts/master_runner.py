@@ -17,6 +17,14 @@ SCRIPTS = [
 
 POST_VALIDATION_SCRIPTS = [
     ("script_VAL1_post_emi_total_validation.py", "Script VAL1 EMI Total Validation"),
+    (
+        "script_VAL2_collection_collection_trans_validation.py",
+        "Script VAL2 Collection vs Collection_trans Amount Validation",
+    ),
+    (
+        "script_VAL3_post_paid_emi_count_validation.py",
+        "Script VAL3 Paid EMI Count Validation",
+    ),
 ]
 
 

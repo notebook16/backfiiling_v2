@@ -1,1 +1,0 @@
-trans_id,is_aggr_trans,org_id,center_id,collection_id,is_active,transaction_cd,trans_type,trans_subtype,mode,amount,recorded_by,scrap_type_id,recon_status,recon_by,recon_at,recon_comment,is_settled,from_user,from_customer,to_user,created_by,created_at,trans_comments,parent_trans_id,request_id,deposit_trans_ids,actual_created_at

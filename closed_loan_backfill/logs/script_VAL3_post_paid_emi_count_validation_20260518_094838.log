@@ -1,0 +1,13 @@
+2026-05-18 15:18:38,978 | INFO | closed_loan_backfill.script_VAL3_post_paid_emi_count_validation | loaded 5 env vars from /home/prince/Desktop/BACKFILL/.env
+2026-05-18 15:18:39,002 | INFO | closed_loan_backfill.script_VAL3_post_paid_emi_count_validation | loaded 49 pipeline-success rows from /home/prince/Desktop/BACKFILL/closed_loan_backfill/generated_sheets/script_5/script_5_final_status_success_20260518_091350.xlsx
+2026-05-18 15:18:40,860 | INFO | closed_loan_backfill.script_VAL3_post_paid_emi_count_validation | === script_VAL3_post_paid_emi_count_validation summary ===
+2026-05-18 15:18:40,860 | INFO | closed_loan_backfill.script_VAL3_post_paid_emi_count_validation | loaded records: 49
+2026-05-18 15:18:40,860 | INFO | closed_loan_backfill.script_VAL3_post_paid_emi_count_validation | matched count: 38
+2026-05-18 15:18:40,860 | INFO | closed_loan_backfill.script_VAL3_post_paid_emi_count_validation | mismatch count: 11
+2026-05-18 15:18:40,860 | INFO | closed_loan_backfill.script_VAL3_post_paid_emi_count_validation | mismatch by reason: {'db DONE EMI count != tracker paid EMI count': 11}
+2026-05-18 15:18:40,860 | INFO | closed_loan_backfill.script_VAL3_post_paid_emi_count_validation | mapping_failed count: 0
+2026-05-18 15:18:40,860 | INFO | closed_loan_backfill.script_VAL3_post_paid_emi_count_validation | DB rule: collection_type='EMI', status='DONE', emi_installment_no>0 (settlement excluded)
+2026-05-18 15:18:40,860 | INFO | closed_loan_backfill.script_VAL3_post_paid_emi_count_validation | Tracker rule: count EMI slots 1..Tenure with valid Paid On (same as script_3)
+2026-05-18 15:18:40,860 | INFO | closed_loan_backfill.script_VAL3_post_paid_emi_count_validation | validation report: /home/prince/Desktop/BACKFILL/closed_loan_backfill/generated_sheets/script_VAL3/script_VAL3_paid_emi_count_validation_20260518_094840.xlsx
+2026-05-18 15:18:40,861 | INFO | closed_loan_backfill.script_VAL3_post_paid_emi_count_validation | latest validation report: /home/prince/Desktop/BACKFILL/closed_loan_backfill/generated_sheets/script_VAL3/script_VAL3_paid_emi_count_validation_latest.xlsx
+2026-05-18 15:18:40,861 | INFO | closed_loan_backfill.script_VAL3_post_paid_emi_count_validation | audit files: {'matched': PosixPath('/home/prince/Desktop/BACKFILL/closed_loan_backfill/generated_sheets/script_VAL3/script_VAL3_paid_emi_count_validation_matched_20260518_094840.xlsx'), 'mismatch': PosixPath('/home/prince/Desktop/BACKFILL/closed_loan_backfill/generated_sheets/script_VAL3/script_VAL3_paid_emi_count_validation_mismatch_20260518_094840.xlsx'), 'mapping_failed': PosixPath('/home/prince/Desktop/BACKFILL/closed_loan_backfill/generated_sheets/script_VAL3/script_VAL3_paid_emi_count_validation_mapping_failed_20260518_094840.xlsx')}

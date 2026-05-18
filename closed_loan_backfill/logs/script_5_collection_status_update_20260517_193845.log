@@ -1,9 +1,0 @@
-2026-05-18 01:08:45,454 | INFO | closed_loan_backfill.script_5_collection_status_update | loaded 5 env vars from /home/prince/Desktop/BACKFILL/.env
-2026-05-18 01:08:45,476 | INFO | closed_loan_backfill.script_5_collection_status_update | loaded 49 rows from /home/prince/Desktop/BACKFILL/closed_loan_backfill/generated_sheets/script_4/script_4_settlement_apply_status_latest.xlsx
-2026-05-18 01:08:45,607 | INFO | closed_loan_backfill.script_5_collection_status_update | script_5 merged script_4 output with closed-loan sheet: script_4_rows=49 merged_ok=49 merge_failed=0
-2026-05-18 01:09:10,324 | INFO | closed_loan_backfill.script_5_collection_status_update | === script_5_collection_status_update summary ===
-2026-05-18 01:09:10,324 | INFO | closed_loan_backfill.script_5_collection_status_update | loaded records: 49
-2026-05-18 01:09:10,324 | INFO | closed_loan_backfill.script_5_collection_status_update | success count: 49
-2026-05-18 01:09:10,324 | INFO | closed_loan_backfill.script_5_collection_status_update | failed count: 0
-2026-05-18 01:09:10,324 | INFO | closed_loan_backfill.script_5_collection_status_update | skipped count: 0
-2026-05-18 01:09:10,325 | INFO | closed_loan_backfill.script_5_collection_status_update | audit files: {'success': PosixPath('/home/prince/Desktop/BACKFILL/closed_loan_backfill/generated_sheets/script_5/script_5_final_status_success_20260517_193910.xlsx'), 'failed': PosixPath('/home/prince/Desktop/BACKFILL/closed_loan_backfill/generated_sheets/script_5/script_5_final_status_failed_20260517_193910.xlsx'), 'skipped': PosixPath('/home/prince/Desktop/BACKFILL/closed_loan_backfill/generated_sheets/script_5/script_5_final_status_skipped_20260517_193910.xlsx')}
