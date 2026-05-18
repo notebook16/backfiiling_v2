@@ -33,6 +33,8 @@ class Paths:
     generated_sheets: Path = field(default_factory=lambda: DEFAULT_ROOT / "generated_sheets")
     generated_collections: Path = field(default_factory=lambda: DEFAULT_ROOT / "generated_collections")
     generated_collection_trans: Path = field(default_factory=lambda: DEFAULT_ROOT / "generated_collection_trans")
+    # DB import staging: collections / collection_trans / collection_comments per script.
+    generated_db_sheets: Path = field(default_factory=lambda: DEFAULT_ROOT / "generated_DB_sheets")
     logs: Path = field(default_factory=lambda: DEFAULT_ROOT / "logs")
     checkpoints: Path = DEFAULT_CHECKPOINTS
 
@@ -54,6 +56,30 @@ def utc_now() -> datetime:
 
 def ts_label() -> str:
     return utc_now().strftime("%Y%m%d_%H%M%S")
+
+
+def prompt_db_import(
+    logger: logging.Logger,
+    *,
+    stage_label: str,
+    files: list[tuple[str, Path]],
+    prompt_text: str | None = None,
+) -> bool:
+    """Ask whether to apply staged DB work. Returns False on EOF, empty answer, or n."""
+    if not files:
+        return False
+    question = prompt_text or "Import these generated files into the database? (y/N): "
+    logger.info("--- staged for database import (%s) ---", stage_label)
+    for label, path in files:
+        logger.info("  %s: %s", label, path)
+    try:
+        ans = input(question).strip().lower()
+    except EOFError:
+        ans = ""
+    if ans in {"y", "yes"}:
+        return True
+    logger.info("database import skipped (answer was not y/yes)")
+    return False
 
 
 def setup_logger(stage: str, paths: Paths) -> logging.Logger:
@@ -103,7 +129,11 @@ def load_env_file(path: Path, logger: logging.Logger | None = None) -> int:
 
 def parse_common_args(description: str) -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description=description)
-    parser.add_argument("--execute", action="store_true", help="Enable DB writes")
+    parser.add_argument(
+        "--execute",
+        action="store_true",
+        help="Legacy: marks non-dry-run runtime; script 3/4 use interactive import after staging unless --dry-run",
+    )
     parser.add_argument("--dry-run", action="store_true", help="Force dry-run mode")
     parser.add_argument("--resume", action="store_true", help="Resume from checkpoint")
     parser.add_argument("--max-workers", type=int, default=4)
@@ -118,6 +148,12 @@ def parse_common_args(description: str) -> argparse.ArgumentParser:
 def runtime_from_args(args: argparse.Namespace) -> tuple[RuntimeConfig, Paths]:
     root = Path(args.root_dir).resolve()
     paths = Paths(root=root, source_sheets=Path(args.source_dir).resolve())
+    paths.generated_sheets = root / "generated_sheets"
+    paths.generated_db_sheets = root / "generated_DB_sheets"
+    paths.generated_collections = root / "generated_collections"
+    paths.generated_collection_trans = root / "generated_collection_trans"
+    paths.logs = root / "logs"
+    paths.checkpoints = root / "state"
     runtime = RuntimeConfig(
         execute=bool(args.execute),
         dry_run=bool(args.dry_run) or not bool(args.execute),
@@ -138,6 +174,15 @@ def ensure_structure(paths: Paths) -> None:
         (paths.generated_sheets / f"script_{i}").mkdir(parents=True, exist_ok=True)
     paths.generated_collections.mkdir(parents=True, exist_ok=True)
     paths.generated_collection_trans.mkdir(parents=True, exist_ok=True)
+    paths.generated_db_sheets.mkdir(parents=True, exist_ok=True)
+    for rel in (
+        "script_3/collection_trans",
+        "script_3/collection_comments",
+        "script_3/collections",
+        "script_4/collections",
+        "script_4/collection_trans",
+    ):
+        (paths.generated_db_sheets / rel).mkdir(parents=True, exist_ok=True)
     paths.logs.mkdir(parents=True, exist_ok=True)
     paths.checkpoints.mkdir(parents=True, exist_ok=True)
 

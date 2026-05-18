@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import csv
+from collections import Counter
 from contextlib import nullcontext
 from datetime import date, datetime, time, timezone
 from decimal import Decimal, InvalidOperation
@@ -18,6 +19,7 @@ from common import (
     log_stage_summary,
     mandatory_failure_fields,
     parse_common_args,
+    prompt_db_import,
     read_excel,
     runtime_from_args,
     setup_logger,
@@ -32,7 +34,7 @@ LOS_DATA_NAME = "LOS _Data.xlsx"
 TARGET_PHASES = {"PHASE_2", "PHASE_3"}
 STATUS_PENDING = "PENDING"
 STATUS_DONE = "DONE"
-PHASE2_DIR_NAME = "produced_sheets_phase_2"
+# SQL-shaped CSVs for collection_trans / collection_comments (all TARGET_PHASES rows).
 
 CENTER_MANAGER_TO_CENTER_IDS = {
     1072: [2],
@@ -314,6 +316,58 @@ def _is_part_subtype(value: Any) -> bool:
     return subtype in {"PART1", "PART2", "PART_1", "PART_2", "P1", "P2"}
 
 
+def _is_truthy(value: Any) -> bool:
+    if _is_blank(value):
+        return False
+    if isinstance(value, bool):
+        return value
+    if isinstance(value, (int, float)):
+        return value != 0
+    return _normalize_token(value) in {"TRUE", "YES", "Y", "1"}
+
+
+def _amount_mismatch_adjustment(
+    *,
+    tracker_total: Decimal,
+    due_amount: Decimal,
+    tracker_extra: Any,
+) -> tuple[bool, Decimal]:
+    """When EXTRA is TRUE for this EMI, excess over due_amount is applied as collection fine."""
+    difference = tracker_total - due_amount
+    if not _is_truthy(tracker_extra) or difference <= 0:
+        return False, Decimal("0")
+    return True, difference
+
+
+def _amount_mismatch_audit_row(
+    *,
+    collection_id: str,
+    loan_id: str,
+    resolved_application_id: str,
+    application_no: str,
+    emi_no: int,
+    tracker_total: Decimal,
+    due_amount: Decimal,
+    is_adjusted: bool,
+    tracker_extra: Any,
+    fine_amount: Decimal,
+) -> dict[str, Any]:
+    difference = tracker_total - due_amount
+    return {
+        "collection_id": collection_id,
+        "loan_id": loan_id,
+        "application_id": resolved_application_id,
+        "application_no": application_no,
+        "emi_installment_no": emi_no,
+        "tracker_total_amount": str(tracker_total),
+        "due_amount": str(due_amount),
+        "difference": str(difference),
+        "tracker_extra": "" if _is_blank(tracker_extra) else str(tracker_extra).strip(),
+        "fine_amount": "" if not is_adjusted else str(fine_amount),
+        "is adjusted?": is_adjusted,
+    }
+
+
 def _build_center_to_manager_map() -> dict[int, int]:
     center_to_manager: dict[int, int] = {}
     for manager_id, center_ids in CENTER_MANAGER_TO_CENTER_IDS.items():
@@ -339,12 +393,174 @@ def _skip_payload(row: dict[str, Any], reason: str) -> dict[str, Any]:
     }
 
 
+def _count_by_phase_field(rows: list[dict[str, Any]], field: str = "phase") -> dict[str, int]:
+    counts: Counter[str] = Counter()
+    for row in rows:
+        key = _normalize_token(row.get(field))
+        counts[key or "(blank)"] += 1
+    return dict(sorted(counts.items()))
+
+
 def _write_csv(path: Path, headers: list[str], rows: list[tuple[Any, ...]]) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     with path.open("w", encoding="utf-8", newline="") as handle:
         writer = csv.writer(handle)
         writer.writerow(headers)
         writer.writerows(rows)
+
+
+def _blank_to_none(value: Any) -> Any:
+    return None if value == "" else value
+
+
+def _trans_tuple_to_insert_params(tup: tuple[Any, ...]) -> dict[str, Any]:
+    """Unpack script_3 collection_trans CSV tuple (28 columns) for INSERT (DB omits deposit_trans_ids, actual_created_at)."""
+    if len(tup) < 28:
+        raise ValueError(f"collection_trans row must have 28 fields, got {len(tup)}")
+    (
+        trans_id,
+        is_aggr_trans,
+        org_id,
+        center_id,
+        collection_id,
+        is_active,
+        transaction_cd,
+        trans_type,
+        trans_subtype,
+        mode,
+        amount,
+        recorded_by,
+        scrap_type_id,
+        recon_status,
+        recon_by,
+        recon_at,
+        recon_comment,
+        is_settled,
+        from_user,
+        from_customer,
+        to_user,
+        created_by,
+        created_at,
+        trans_comments,
+        parent_trans_id,
+        request_id,
+        _deposit_trans_ids,
+        _actual_created_at,
+    ) = tup
+    fc = _to_int(from_customer)
+    if fc is None:
+        fc = 0
+    parent = _to_int(parent_trans_id) if parent_trans_id not in (None, "") else None
+    req = _to_int(request_id) if request_id not in (None, "") else None
+    return {
+        "trans_id": int(trans_id),
+        "is_aggr_trans": bool(is_aggr_trans),
+        "org_id": int(org_id),
+        "center_id": int(center_id),
+        "collection_id": int(collection_id),
+        "is_active": bool(is_active),
+        "transaction_cd": _blank_to_none(transaction_cd),
+        "trans_type": str(trans_type),
+        "trans_subtype": str(trans_subtype),
+        "mode": str(mode),
+        "amount": Decimal(str(amount)),
+        "recorded_by": int(recorded_by),
+        "scrap_type_id": int(scrap_type_id),
+        "recon_status": str(recon_status),
+        "recon_by": int(recon_by) if recon_by is not None else None,
+        "recon_at": _blank_to_none(recon_at),
+        "recon_comment": _blank_to_none(recon_comment),
+        "is_settled": bool(is_settled),
+        "from_user": int(from_user),
+        "from_customer": int(fc),
+        "to_user": int(to_user),
+        "created_by": int(created_by),
+        "created_at": created_at,
+        "trans_comments": _blank_to_none(trans_comments),
+        "parent_trans_id": parent,
+        "request_id": req,
+    }
+
+
+def _comment_tuple_to_insert_params(tup: tuple[Any, ...]) -> dict[str, Any]:
+    collection_comment_id, org_id, collection_id, is_called, comment, is_latest, created_by, created_at = tup
+    return {
+        "collection_comment_id": int(collection_comment_id),
+        "org_id": int(org_id),
+        "collection_id": int(collection_id),
+        "is_called": bool(is_called),
+        "comment": str(comment),
+        "is_latest": bool(is_latest),
+        "created_by": int(created_by),
+        "created_at": created_at,
+    }
+
+
+def _apply_script3_collection_updates(db_cursor: Any, manifest_rows: list[dict[str, Any]]) -> None:
+    for u in manifest_rows:
+        fine_amount = _to_decimal(u.get("fine_amount")) or Decimal("0")
+        db_cursor.execute(
+            """
+            UPDATE collections
+            SET status=%s, created_by=%s, collector_id=%s, fine_amount=%s, discount_amount=%s
+            WHERE collection_id=%s AND is_active=true AND UPPER(status)=%s
+            """,
+            (
+                STATUS_DONE,
+                int(u["manager_id"]),
+                int(u["manager_id"]),
+                fine_amount,
+                Decimal("0"),
+                int(u["collection_id"]),
+                STATUS_PENDING,
+            ),
+        )
+        if db_cursor.rowcount != 1:
+            raise RuntimeError(
+                f"UPDATE collections expected 1 row for collection_id={u.get('collection_id')}, got {db_cursor.rowcount}"
+            )
+
+
+def _insert_script3_trans_and_comments(
+    db_cursor: Any,
+    logger: Any,
+    trans_rows: list[tuple[Any, ...]],
+    comment_rows: list[tuple[Any, ...]],
+) -> None:
+    trans_sql = """
+        INSERT INTO collection_trans (
+            trans_id, is_aggr_trans, org_id, center_id, collection_id, is_active,
+            transaction_cd, trans_type, trans_subtype, mode, amount, recorded_by,
+            scrap_type_id, recon_status, recon_by, recon_at, recon_comment, is_settled,
+            from_user, from_customer, to_user, created_by, created_at, trans_comments,
+            parent_trans_id, request_id
+        ) VALUES (
+            %(trans_id)s, %(is_aggr_trans)s, %(org_id)s, %(center_id)s, %(collection_id)s,
+            %(is_active)s, %(transaction_cd)s, %(trans_type)s, %(trans_subtype)s, %(mode)s,
+            %(amount)s, %(recorded_by)s, %(scrap_type_id)s, %(recon_status)s, %(recon_by)s,
+            %(recon_at)s, %(recon_comment)s, %(is_settled)s, %(from_user)s, %(from_customer)s,
+            %(to_user)s, %(created_by)s, %(created_at)s, %(trans_comments)s, %(parent_trans_id)s,
+            %(request_id)s
+        )
+        """
+    comment_sql = """
+        INSERT INTO collection_comments (
+            collection_comment_id, org_id, collection_id, is_called, comment, is_latest,
+            created_by, created_at
+        ) VALUES (
+            %(collection_comment_id)s, %(org_id)s, %(collection_id)s, %(is_called)s, %(comment)s,
+            %(is_latest)s, %(created_by)s, %(created_at)s
+        )
+        """
+    for tup in trans_rows:
+        db_cursor.execute(trans_sql, _trans_tuple_to_insert_params(tup))
+    for tup in comment_rows:
+        db_cursor.execute(comment_sql, _comment_tuple_to_insert_params(tup))
+    logger.info(
+        "inserted collection_trans=%s and collection_comments=%s into DB",
+        len(trans_rows),
+        len(comment_rows),
+    )
 
 
 def _write_latest_success(base_dir: Path, rows: list[dict[str, Any]]) -> Path:
@@ -383,13 +599,19 @@ def run() -> int:
     cp = CheckpointStore(STAGE, paths)
     load_env_file(paths.root.parent / ".env", logger)
 
-    output_dir = paths.generated_sheets / "script_3"
-    phase2_dir = output_dir / PHASE2_DIR_NAME
     run_ts = _run_ts()
+    output_dir = paths.generated_sheets / "script_3"
+    db_bundle_dir = paths.generated_db_sheets / "script_3" / run_ts
+    db_bundle_dir.mkdir(parents=True, exist_ok=True)
+    explicit_dry_run = bool(args.dry_run)
 
     input_file = _resolve_input_file(paths, args.input)
     tracker_rows = to_records(read_excel(input_file, 0))
     logger.info("loaded %s validated tracker rows from %s", len(tracker_rows), input_file)
+    logger.info(
+        "input tracker rows by phase (normalized): %s",
+        _count_by_phase_field(tracker_rows),
+    )
 
     loan_ids = _extract_loan_ids(tracker_rows)
     db_rows = _fetch_db_sheet_rows(logger, loan_ids)
@@ -413,24 +635,27 @@ def run() -> int:
     manual: list[dict[str, Any]] = []
     updated_collection_rows: list[dict[str, Any]] = []
     amount_adjustment_rows: list[dict[str, Any]] = []
-    phase2_trans_rows: list[tuple[Any, ...]] = []
-    phase2_comment_rows: list[tuple[Any, ...]] = []
+    collection_trans_sql_rows: list[tuple[Any, ...]] = []
+    collection_comments_sql_rows: list[tuple[Any, ...]] = []
+    collection_trans_sql_by_phase: Counter[str] = Counter()
+    collection_comments_sql_by_phase: Counter[str] = Counter()
     blocked_by_collection: dict[str, dict[str, str]] = {}
     completed_collection_keys: list[str] = []
-    next_trans_id = 15000
-    next_comment_id = 15000
+    next_trans_id = 25000
+    next_comment_id = 25000
 
     db = DbClient(logger)
-    execute_mode = runtime.execute and not runtime.dry_run
-    conn_cm = db.conn() if execute_mode else nullcontext(None)
+    conn_cm = nullcontext(None)
     try:
         with conn_cm as conn:
-            db_cursor = conn.cursor() if conn is not None else None
+            db_cursor = None
             for row in tracker_rows:
                 phase = _normalize_token(row.get("phase"))
                 if phase and phase not in TARGET_PHASES:
                     skipped.append(_skip_payload(row, "non_script_3_phase"))
                     continue
+
+                phase_label = phase or "(blank)"
 
                 loan_id = _normalize_identifier(row.get("loan_id"))
                 application_id = _normalize_identifier(row.get("application_id"))
@@ -530,6 +755,7 @@ def run() -> int:
                     tracker_total = _to_decimal(_tracker_emi_value(row, "Total Amount", emi_no))
                     tracker_comment = _clean_key(_tracker_emi_value(row, "Comments", emi_no))
                     tracker_due_date = _tracker_emi_value(row, f"EMI - {emi_no}", 1)
+                    tracker_extra = _tracker_emi_value(row, "EXTRA", emi_no)
 
                     if not _is_valid_paid_on(tracker_paid_on):
                         _note_cannot_update(
@@ -555,29 +781,37 @@ def run() -> int:
                         row_block_reasons.append("tracker_total_or_due_amount_missing")
                         continue
 
+                    amount_adjusted, fine_amount = _amount_mismatch_adjustment(
+                        tracker_total=tracker_total,
+                        due_amount=due_amount,
+                        tracker_extra=tracker_extra,
+                    )
                     if tracker_total != due_amount:
-                        _note_cannot_update(
-                            blocked_by_collection,
-                            collection_id=collection_id,
-                            loan_id=loan_id,
-                            application_no=los_app or application_no,
-                            reason="amount_mismatch_exact_required",
-                        )
-                        row_blocked_ids.append(collection_id)
-                        row_block_reasons.append("amount_mismatch_exact_required")
                         amount_adjustment_rows.append(
-                            {
-                                "collection_id": collection_id,
-                                "loan_id": loan_id,
-                                "application_id": resolved_application_id,
-                                "application_no": los_app or application_no,
-                                "emi_installment_no": emi_no,
-                                "tracker_total_amount": str(tracker_total),
-                                "due_amount": str(due_amount),
-                                "difference": str(tracker_total - due_amount),
-                            }
+                            _amount_mismatch_audit_row(
+                                collection_id=collection_id,
+                                loan_id=loan_id,
+                                resolved_application_id=resolved_application_id,
+                                application_no=los_app or application_no,
+                                emi_no=emi_no,
+                                tracker_total=tracker_total,
+                                due_amount=due_amount,
+                                is_adjusted=amount_adjusted,
+                                tracker_extra=tracker_extra,
+                                fine_amount=fine_amount,
+                            )
                         )
-                        continue
+                        if not amount_adjusted:
+                            _note_cannot_update(
+                                blocked_by_collection,
+                                collection_id=collection_id,
+                                loan_id=loan_id,
+                                application_no=los_app or application_no,
+                                reason="amount_mismatch_exact_required",
+                            )
+                            row_blocked_ids.append(collection_id)
+                            row_block_reasons.append("amount_mismatch_exact_required")
+                            continue
 
                     center_id = _to_int(db_row.get("center_id"))
                     manager_id = center_to_manager.get(center_id or -1)
@@ -604,7 +838,7 @@ def run() -> int:
                                 STATUS_DONE,
                                 manager_id,
                                 manager_id,
-                                Decimal("0"),
+                                fine_amount,
                                 Decimal("0"),
                                 int(collection_id),
                                 STATUS_PENDING,
@@ -626,6 +860,7 @@ def run() -> int:
                     completed_collection_keys.append(collection_key)
                     updated_collection_rows.append(
                         {
+                            "tracker_phase": phase_label,
                             "loan_id": loan_id,
                             "application_id": resolved_application_id,
                             "application_no": los_app or application_no,
@@ -633,7 +868,9 @@ def run() -> int:
                             "loan_term_id": resolved_loan_term_id,
                             "collection_id": collection_id,
                             "emi_installment_no": emi_no,
-                            "status_after": STATUS_DONE if execute_mode else "WOULD_UPDATE_TO_DONE",
+                            "status_after": STATUS_DONE,
+                            "amount_adjusted": amount_adjusted,
+                            "fine_amount": str(fine_amount),
                             "collection_subtype": db_row.get("collection_subtype"),
                             "due_amount": str(due_amount),
                             "tracker_total_amount": str(tracker_total),
@@ -652,7 +889,7 @@ def run() -> int:
                     actual_created_at = datetime.now(timezone.utc).isoformat()
                     from_customer = resolved_customer_id or ""
                     if tracker_cash is not None and tracker_cash > 0:
-                        phase2_trans_rows.append(
+                        collection_trans_sql_rows.append(
                             (
                                 next_trans_id,
                                 True,
@@ -684,10 +921,11 @@ def run() -> int:
                                 actual_created_at,
                             )
                         )
+                        collection_trans_sql_by_phase[phase_label] += 1
                         next_trans_id += 1
 
                     if tracker_online is not None and tracker_online > 0:
-                        phase2_trans_rows.append(
+                        collection_trans_sql_rows.append(
                             (
                                 next_trans_id,
                                 True,
@@ -719,11 +957,12 @@ def run() -> int:
                                 actual_created_at,
                             )
                         )
+                        collection_trans_sql_by_phase[phase_label] += 1
                         next_trans_id += 1
 
                     if tracker_comment:
                         comment_prefix = f"Application NO. {los_app or application_no} || " if (los_app or application_no) else ""
-                        phase2_comment_rows.append(
+                        collection_comments_sql_rows.append(
                             (
                                 next_comment_id,
                                 1,
@@ -735,6 +974,7 @@ def run() -> int:
                                 actual_created_at,
                             )
                         )
+                        collection_comments_sql_by_phase[phase_label] += 1
                         next_comment_id += 1
 
                 success.append(
@@ -767,10 +1007,10 @@ def run() -> int:
                         "blocked_reasons": "; ".join(sorted(set(row_block_reasons))),
                         "processed_collection_count": len(set(row_processed_ids)),
                         "backfill_result": (
-                            "updated"
-                            if execute_mode and row_updated_ids
-                            else "would_update"
-                            if row_updated_ids
+                            "staged_for_import"
+                            if row_updated_ids and not explicit_dry_run
+                            else "dry_run_staged"
+                            if row_updated_ids and explicit_dry_run
                             else "already_processed_only"
                             if row_already_processed_ids and not row_blocked_ids
                             else "validated_no_eligible_collection"
@@ -781,10 +1021,6 @@ def run() -> int:
                 )
     finally:
         db.close()
-
-    if execute_mode:
-        for key in completed_collection_keys:
-            cp.mark_completed(key)
 
     mapping_validated_input = output_dir / "script_3_mapping_validated_input.xlsx"
     pd.DataFrame(success).to_excel(mapping_validated_input, index=False)
@@ -817,9 +1053,17 @@ def run() -> int:
     )
     logger.info("cannot-update report: %s", cannot_update_path)
 
-    phase2_trans_path = phase2_dir / f"collection_trans_{run_ts}.csv"
+    manifest_path = db_bundle_dir / "collections_update_manifest.xlsx"
+    pd.DataFrame(updated_collection_rows).to_excel(manifest_path, index=False)
+    logger.info(
+        "collections update manifest (for DB import): %s (%s rows)",
+        manifest_path,
+        len(updated_collection_rows),
+    )
+
+    collection_trans_sql_path = db_bundle_dir / f"collection_trans_{run_ts}.csv"
     _write_csv(
-        phase2_trans_path,
+        collection_trans_sql_path,
         [
             "trans_id",
             "is_aggr_trans",
@@ -850,13 +1094,17 @@ def run() -> int:
             "deposit_trans_ids",
             "actual_created_at",
         ],
-        phase2_trans_rows,
+        collection_trans_sql_rows,
     )
-    logger.info("PHASE 2 collection_trans: %s (%s rows)", phase2_trans_path, len(phase2_trans_rows))
+    logger.info(
+        "collection_trans SQL CSV (PHASE_2 and PHASE_3): %s (%s rows)",
+        collection_trans_sql_path,
+        len(collection_trans_sql_rows),
+    )
 
-    phase2_comments_path = phase2_dir / f"collection_comments_{run_ts}.csv"
+    collection_comments_sql_path = db_bundle_dir / f"collection_comments_{run_ts}.csv"
     _write_csv(
-        phase2_comments_path,
+        collection_comments_sql_path,
         [
             "collection_comment_id",
             "org_id",
@@ -867,9 +1115,71 @@ def run() -> int:
             "created_by",
             "created_at",
         ],
-        phase2_comment_rows,
+        collection_comments_sql_rows,
     )
-    logger.info("PHASE 2 collection_comments: %s (%s rows)", phase2_comments_path, len(phase2_comment_rows))
+    logger.info(
+        "collection_comments SQL CSV (PHASE_2 and PHASE_3): %s (%s rows)",
+        collection_comments_sql_path,
+        len(collection_comments_sql_rows),
+    )
+
+    has_collection_updates = bool(updated_collection_rows)
+    has_trans_comments = bool(collection_trans_sql_rows or collection_comments_sql_rows)
+
+    collections_applied = not has_collection_updates
+    if not explicit_dry_run and has_collection_updates:
+        if prompt_db_import(
+            logger,
+            stage_label="script_3_step_1_collections_manifest",
+            files=[("collections_update_manifest", manifest_path)],
+            prompt_text=(
+                "Apply collection updates from this manifest to the database (UPDATE collections)? (y/N): "
+            ),
+        ):
+            db_collections = DbClient(logger)
+            try:
+                with db_collections.conn() as conn:
+                    cur = conn.cursor()
+                    _apply_script3_collection_updates(cur, updated_collection_rows)
+                collections_applied = True
+            finally:
+                db_collections.close()
+
+    trans_comments_applied = not has_trans_comments
+    if not explicit_dry_run and has_trans_comments:
+        if not collections_applied:
+            logger.warning(
+                "Skipping collection_trans / collection_comments DB import: "
+                "collection manifest updates were not applied first."
+            )
+        elif prompt_db_import(
+            logger,
+            stage_label="script_3_step_2_trans_and_comments_csv",
+            files=[
+                ("collection_trans", collection_trans_sql_path),
+                ("collection_comments", collection_comments_sql_path),
+            ],
+            prompt_text=(
+                "Import collection_trans and collection_comments from the staged CSV files into the database? (y/N): "
+            ),
+        ):
+            db_trans = DbClient(logger)
+            try:
+                with db_trans.conn() as conn:
+                    cur = conn.cursor()
+                    _insert_script3_trans_and_comments(
+                        cur,
+                        logger,
+                        collection_trans_sql_rows,
+                        collection_comments_sql_rows,
+                    )
+                trans_comments_applied = True
+            finally:
+                db_trans.close()
+
+    if collections_applied and trans_comments_applied:
+        for key in completed_collection_keys:
+            cp.mark_completed(key)
 
     out = write_audit_xlsx(
         output_dir,
@@ -886,8 +1196,8 @@ def run() -> int:
             "skipped": skipped,
             "manual_intervention": manual,
             "updated_collections": updated_collection_rows,
-            "phase2_collection_trans": [{"mode": row[9]} for row in phase2_trans_rows],
-            "phase2_collection_comments": [{"generated": True} for _ in phase2_comment_rows],
+            "collection_trans_sql": [{"mode": row[9]} for row in collection_trans_sql_rows],
+            "collection_comments_sql": [{"generated": True} for _ in collection_comments_sql_rows],
         },
         reason_fields_by_bucket={
             "failed": ("failure_reason",),
@@ -895,18 +1205,35 @@ def run() -> int:
             "manual_intervention": ("failure_reason",),
             "success": ("backfill_result",),
             "updated_collections": ("status_after",),
-            "phase2_collection_trans": ("mode",),
+            "collection_trans_sql": ("mode",),
         },
+    )
+    logger.info("--- by tracker phase (normalized) ---")
+    logger.info("success rows by phase: %s", _count_by_phase_field(success))
+    logger.info("failed rows by phase: %s", _count_by_phase_field(failed))
+    logger.info("skipped rows by phase: %s", _count_by_phase_field(skipped))
+    logger.info(
+        "updated_collections rows by tracker_phase: %s",
+        _count_by_phase_field(updated_collection_rows, field="tracker_phase"),
+    )
+    logger.info(
+        "collection_trans_sql rows by tracker phase: %s",
+        dict(sorted(collection_trans_sql_by_phase.items())),
+    )
+    logger.info(
+        "collection_comments_sql rows by tracker phase: %s",
+        dict(sorted(collection_comments_sql_by_phase.items())),
     )
     logger.info("audit files: %s", out)
     logger.info(
-        "script_3 summary: success_rows=%s failed_rows=%s skipped_rows=%s updated_collections=%s phase2_trans=%s phase2_comments=%s",
+        "script_3 summary: success_rows=%s failed_rows=%s skipped_rows=%s updated_collections=%s "
+        "collection_trans_sql_rows=%s collection_comments_sql_rows=%s",
         len(success),
         len(failed),
         len(skipped),
         len(updated_collection_rows),
-        len(phase2_trans_rows),
-        len(phase2_comment_rows),
+        len(collection_trans_sql_rows),
+        len(collection_comments_sql_rows),
     )
     return 0 if not failed else 2
 

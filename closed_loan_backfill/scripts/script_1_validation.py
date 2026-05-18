@@ -26,7 +26,7 @@ from common import (
 STAGE = "script_1_validation"
 DETAILS_TARGET_STATUSES = {"TARGET"}
 DETAILS_TARGET_PHASES = {"PHASE_2", "PHASE_3"}
-EXPECTED_TARGET_COUNT = 73
+EXPECTED_TARGET_COUNT = 49
 CLOSE_STATUS_UPDATE_DELAY_SECONDS = 0.5
 
 
@@ -388,19 +388,25 @@ def run() -> int:
                     continue
 
                 emi1 = _to_timestamp(row.get("tracker_emi_1_date"))
-                tracker_installation_date = _to_timestamp(row.get("tracker_installation_date"))
-                expected_emi1 = (db_installation_date + pd.DateOffset(months=1) + timedelta(days=1)).normalize()
-                emi1_matches = not pd.isna(emi1) and emi1.normalize() == expected_emi1
-                installation_date_matches = (
-                    not pd.isna(tracker_installation_date)
-                    and tracker_installation_date.normalize() == db_installation_date.normalize()
-                )
-                if not emi1_matches and not installation_date_matches:
-                    if pd.isna(emi1) and pd.isna(tracker_installation_date):
-                        manual.append(_failure_payload(row, "missing EMI-1 and Installation Date"))
-                    else:
-                        failed.append(_failure_payload(row, "EMI-1 and Installation Date validation failed"))
-                    continue
+                if not pd.isna(emi1):
+                    expected_emi1 = (
+                        db_installation_date + timedelta(days=1) + pd.DateOffset(months=1)
+                    ).normalize()
+                    if emi1.normalize() != expected_emi1:
+                        failed.append(_failure_payload(row, "EMI-1 validation failed"))
+                        continue
+                else:
+                    tracker_installation_date = _to_timestamp(row.get("tracker_installation_date"))
+                    installation_date_matches = (
+                        not pd.isna(tracker_installation_date)
+                        and tracker_installation_date.normalize() == db_installation_date.normalize()
+                    )
+                    if not installation_date_matches:
+                        if pd.isna(tracker_installation_date):
+                            manual.append(_failure_payload(row, "missing tracker installation date"))
+                        else:
+                            failed.append(_failure_payload(row, "Installation Date validation failed"))
+                        continue
 
                 tracker_dp = _to_decimal(row.get("tracker_dp"))
                 db_dp = _to_decimal(row.get("db_dp_amt"))

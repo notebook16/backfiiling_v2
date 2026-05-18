@@ -1,0 +1,62 @@
+2026-05-18 13:24:56,437 | INFO | closed_loan_backfill.script_1_validation | loaded 5 env vars from /home/prince/Desktop/BACKFILL/.env
+2026-05-18 13:24:56,531 | INFO | closed_loan_backfill.script_1_validation | generated DB details sheet: /home/prince/Desktop/BACKFILL/closed_loan_backfill/source_sheets/CLOSED_LOAN_DB_DETAILS.xlsx (49 rows)
+2026-05-18 13:24:56,534 | INFO | closed_loan_backfill.script_1_validation | loaded TARGET validation records: 49
+2026-05-18 13:24:56,536 | INFO | closed_loan_backfill.script_1_validation | close_status must be PENDING before validation pass: application_id=3706 loan_id=3706 current_close_status=RETURN
+2026-05-18 13:24:56,538 | INFO | closed_loan_backfill.script_1_validation | close_status must be PENDING before validation pass: application_id=2727 loan_id=2727 current_close_status=CLOSE
+2026-05-18 13:24:56,538 | INFO | closed_loan_backfill.script_1_validation | close_status must be PENDING before validation pass: application_id=573 loan_id=573 current_close_status=CLOSE
+2026-05-18 13:24:56,539 | INFO | closed_loan_backfill.script_1_validation | close_status must be PENDING before validation pass: application_id=711 loan_id=711 current_close_status=CLOSE
+2026-05-18 13:24:56,540 | INFO | closed_loan_backfill.script_1_validation | close_status must be PENDING before validation pass: application_id=1977 loan_id=1977 current_close_status=CLOSE
+2026-05-18 13:24:56,540 | INFO | closed_loan_backfill.script_1_validation | close_status must be PENDING before validation pass: application_id=2644 loan_id=2644 current_close_status=RECOVER
+2026-05-18 13:24:56,541 | INFO | closed_loan_backfill.script_1_validation | close_status must be PENDING before validation pass: application_id=101 loan_id=101 current_close_status=RECOVER
+2026-05-18 13:24:56,541 | INFO | closed_loan_backfill.script_1_validation | close_status must be PENDING before validation pass: application_id=203 loan_id=203 current_close_status=RECOVER
+2026-05-18 13:24:56,542 | INFO | closed_loan_backfill.script_1_validation | close_status must be PENDING before validation pass: application_id=2680 loan_id=2680 current_close_status=RECOVER
+2026-05-18 13:24:56,543 | INFO | closed_loan_backfill.script_1_validation | close_status must be PENDING before validation pass: application_id=318 loan_id=318 current_close_status=CLOSE
+2026-05-18 13:24:56,543 | INFO | closed_loan_backfill.script_1_validation | close_status must be PENDING before validation pass: application_id=417 loan_id=417 current_close_status=RECOVER
+2026-05-18 13:24:56,544 | INFO | closed_loan_backfill.script_1_validation | close_status must be PENDING before validation pass: application_id=1432 loan_id=1432 current_close_status=CLOSE
+2026-05-18 13:24:56,545 | INFO | closed_loan_backfill.script_1_validation | close_status must be PENDING before validation pass: application_id=1602 loan_id=1602 current_close_status=CLOSE
+2026-05-18 13:24:56,545 | INFO | closed_loan_backfill.script_1_validation | close_status must be PENDING before validation pass: application_id=2003 loan_id=2003 current_close_status=RETURN
+2026-05-18 13:24:56,546 | INFO | closed_loan_backfill.script_1_validation | close_status must be PENDING before validation pass: application_id=2231 loan_id=2231 current_close_status=RECOVER
+2026-05-18 13:24:56,546 | INFO | closed_loan_backfill.script_1_validation | close_status must be PENDING before validation pass: application_id=2832 loan_id=2832 current_close_status=RECOVER
+2026-05-18 13:24:56,547 | INFO | closed_loan_backfill.script_1_validation | close_status must be PENDING before validation pass: application_id=2523 loan_id=2523 current_close_status=RECOVER
+2026-05-18 13:24:56,547 | INFO | closed_loan_backfill.script_1_validation | close_status must be PENDING before validation pass: application_id=2524 loan_id=2524 current_close_status=RECOVER
+2026-05-18 13:24:56,548 | INFO | closed_loan_backfill.script_1_validation | close_status must be PENDING before validation pass: application_id=2554 loan_id=2554 current_close_status=RECOVER
+2026-05-18 13:24:56,548 | INFO | closed_loan_backfill.script_1_validation | close_status must be PENDING before validation pass: application_id=2563 loan_id=2563 current_close_status=RECOVER
+2026-05-18 13:24:56,549 | INFO | closed_loan_backfill.script_1_validation | close_status must be PENDING before validation pass: application_id=33 loan_id=33 current_close_status=RECOVER
+2026-05-18 13:24:56,550 | INFO | closed_loan_backfill.script_1_validation | close_status must be PENDING before validation pass: application_id=2569 loan_id=2569 current_close_status=RECOVER
+2026-05-18 13:24:56,551 | INFO | closed_loan_backfill.script_1_validation | close_status must be PENDING before validation pass: application_id=2574 loan_id=2574 current_close_status=RECOVER
+2026-05-18 13:24:56,552 | INFO | closed_loan_backfill.script_1_validation | close_status must be PENDING before validation pass: application_id=2579 loan_id=2579 current_close_status=RECOVER
+2026-05-18 13:24:56,553 | INFO | closed_loan_backfill.script_1_validation | close_status must be PENDING before validation pass: application_id=85 loan_id=85 current_close_status=RECOVER
+2026-05-18 13:24:56,553 | INFO | closed_loan_backfill.script_1_validation | close_status must be PENDING before validation pass: application_id=198 loan_id=198 current_close_status=RECOVER
+2026-05-18 13:24:56,553 | INFO | closed_loan_backfill.script_1_validation | close_status must be PENDING before validation pass: application_id=191 loan_id=191 current_close_status=RECOVER
+2026-05-18 13:24:56,554 | INFO | closed_loan_backfill.script_1_validation | close_status must be PENDING before validation pass: application_id=260 loan_id=260 current_close_status=RECOVER
+2026-05-18 13:24:56,554 | INFO | closed_loan_backfill.script_1_validation | close_status must be PENDING before validation pass: application_id=491 loan_id=491 current_close_status=RECOVER
+2026-05-18 13:24:56,555 | INFO | closed_loan_backfill.script_1_validation | close_status must be PENDING before validation pass: application_id=2593 loan_id=2593 current_close_status=RECOVER
+2026-05-18 13:24:56,555 | INFO | closed_loan_backfill.script_1_validation | close_status must be PENDING before validation pass: application_id=2594 loan_id=2594 current_close_status=RECOVER
+2026-05-18 13:24:56,555 | INFO | closed_loan_backfill.script_1_validation | close_status must be PENDING before validation pass: application_id=790 loan_id=790 current_close_status=RECOVER
+2026-05-18 13:24:56,556 | INFO | closed_loan_backfill.script_1_validation | close_status must be PENDING before validation pass: application_id=988 loan_id=988 current_close_status=RECOVER
+2026-05-18 13:24:56,556 | INFO | closed_loan_backfill.script_1_validation | close_status must be PENDING before validation pass: application_id=1223 loan_id=1223 current_close_status=RECOVER
+2026-05-18 13:24:56,557 | INFO | closed_loan_backfill.script_1_validation | close_status must be PENDING before validation pass: application_id=1567 loan_id=1567 current_close_status=RECOVER
+2026-05-18 13:24:56,557 | INFO | closed_loan_backfill.script_1_validation | close_status must be PENDING before validation pass: application_id=1997 loan_id=1997 current_close_status=RECOVER
+2026-05-18 13:24:56,557 | INFO | closed_loan_backfill.script_1_validation | close_status must be PENDING before validation pass: application_id=2341 loan_id=2341 current_close_status=RECOVER
+2026-05-18 13:24:56,558 | INFO | closed_loan_backfill.script_1_validation | close_status must be PENDING before validation pass: application_id=2401 loan_id=2401 current_close_status=RECOVER
+2026-05-18 13:24:56,559 | INFO | closed_loan_backfill.script_1_validation | close_status must be PENDING before validation pass: application_id=2422 loan_id=2422 current_close_status=RECOVER
+2026-05-18 13:24:56,559 | INFO | closed_loan_backfill.script_1_validation | close_status must be PENDING before validation pass: application_id=2459 loan_id=2459 current_close_status=RECOVER
+2026-05-18 13:24:56,560 | INFO | closed_loan_backfill.script_1_validation | close_status must be PENDING before validation pass: application_id=4 loan_id=4 current_close_status=RECOVER
+2026-05-18 13:24:56,561 | INFO | closed_loan_backfill.script_1_validation | close_status must be PENDING before validation pass: application_id=2494 loan_id=2494 current_close_status=RECOVER
+2026-05-18 13:24:56,561 | INFO | closed_loan_backfill.script_1_validation | close_status must be PENDING before validation pass: application_id=99 loan_id=99 current_close_status=RECOVER
+2026-05-18 13:24:56,561 | INFO | closed_loan_backfill.script_1_validation | close_status must be PENDING before validation pass: application_id=1028 loan_id=1028 current_close_status=RECOVER
+2026-05-18 13:24:56,562 | INFO | closed_loan_backfill.script_1_validation | close_status must be PENDING before validation pass: application_id=1218 loan_id=1218 current_close_status=RECOVER
+2026-05-18 13:24:56,562 | INFO | closed_loan_backfill.script_1_validation | close_status must be PENDING before validation pass: application_id=1213 loan_id=1213 current_close_status=RECOVER
+2026-05-18 13:24:56,563 | INFO | closed_loan_backfill.script_1_validation | close_status must be PENDING before validation pass: application_id=1484 loan_id=1484 current_close_status=CLOSE
+2026-05-18 13:24:56,563 | INFO | closed_loan_backfill.script_1_validation | close_status must be PENDING before validation pass: application_id=1490 loan_id=1490 current_close_status=RECOVER
+2026-05-18 13:24:56,563 | INFO | closed_loan_backfill.script_1_validation | close_status must be PENDING before validation pass: application_id=2514 loan_id=2514 current_close_status=RECOVER
+2026-05-18 13:24:56,596 | INFO | closed_loan_backfill.script_1_validation | === script_1_validation summary ===
+2026-05-18 13:24:56,596 | INFO | closed_loan_backfill.script_1_validation | loaded records: 49
+2026-05-18 13:24:56,596 | INFO | closed_loan_backfill.script_1_validation | success count: 0
+2026-05-18 13:24:56,596 | INFO | closed_loan_backfill.script_1_validation | failed count: 49
+2026-05-18 13:24:56,596 | INFO | closed_loan_backfill.script_1_validation | failed by reason: {'PHASE_2 close_status must be PENDING': 27, 'PHASE_3 close_status must be PENDING': 22}
+2026-05-18 13:24:56,596 | INFO | closed_loan_backfill.script_1_validation | skipped count: 0
+2026-05-18 13:24:56,596 | INFO | closed_loan_backfill.script_1_validation | manual_intervention count: 0
+2026-05-18 13:24:56,596 | INFO | closed_loan_backfill.script_1_validation | close_status inline update summary: updated_rows=0 already_pending=0 not_found=0
+2026-05-18 13:24:56,622 | INFO | closed_loan_backfill.script_1_validation | audit files: {'success': PosixPath('/home/prince/Desktop/BACKFILL/closed_loan_backfill/generated_sheets/script_1/script_1_validation_success_20260518_075456.xlsx'), 'failed': PosixPath('/home/prince/Desktop/BACKFILL/closed_loan_backfill/generated_sheets/script_1/script_1_validation_failed_20260518_075456.xlsx'), 'skipped': PosixPath('/home/prince/Desktop/BACKFILL/closed_loan_backfill/generated_sheets/script_1/script_1_validation_skipped_20260518_075456.xlsx'), 'manual_intervention': PosixPath('/home/prince/Desktop/BACKFILL/closed_loan_backfill/generated_sheets/script_1/script_1_validation_manual_intervention_20260518_075456.xlsx')}
+2026-05-18 13:24:56,622 | INFO | closed_loan_backfill.script_1_validation | latest success file: /home/prince/Desktop/BACKFILL/closed_loan_backfill/generated_sheets/script_1/script_1_validation_success_latest.xlsx

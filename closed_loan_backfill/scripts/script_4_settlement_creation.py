@@ -1,13 +1,15 @@
 #!/usr/bin/env python3
 from __future__ import annotations
 
-import json
+import math
 import re
+import shutil
 from datetime import datetime, timedelta, timezone
 from decimal import Decimal
 from pathlib import Path
 from typing import Any
 
+import numbers
 import pandas as pd
 from psycopg2.extras import RealDictCursor
 
@@ -18,17 +20,19 @@ from common import (
     log_stage_summary,
     mandatory_failure_fields,
     parse_common_args,
+    prompt_db_import,
     read_excel,
     runtime_from_args,
     setup_logger,
     to_records,
+    ts_label,
     write_audit_xlsx,
 )
 
 STAGE = "script_4_settlement_creation"
 DEFAULT_INPUT = "script_3_backfill_success_latest.xlsx"
-COLLECTION_START_ID = 35000
-TRANS_START_ID = 35000
+COLLECTION_START_ID = 45000
+TRANS_START_ID = 45000
 
 CENTER_MANAGER_TO_CENTER_IDS = {
     1072: [2],
@@ -102,30 +106,119 @@ def _build_center_to_manager_map() -> dict[int, int]:
     return center_to_manager
 
 
-def _now_ist() -> datetime:
-    return datetime.now().astimezone()
-
-
 def _resolve_info_request_type(final_close_type: Any) -> str | None:
     token = _clean_key(final_close_type).upper()
     if token == "RECOVERED":
         return "Application_Close_Recover_Asset"
     if token == "FORECLOSE":
         return "Application_Close_Foreclose"
-    if token == "RETURN":
+    if token in {"RETURN_CREDIT", "RETURN_DEBIT"}:
         return "Application_Close_Return_Asset"
     return None
 
 
-def _parse_settlement_amount(value: Any) -> Decimal | None:
+def _settlement_amount_is_negative(value: Any) -> bool:
+    if _is_blank(value):
+        return False
+    if isinstance(value, numbers.Real) and not isinstance(value, bool):
+        decimal_value = _to_decimal(value)
+        return decimal_value is not None and decimal_value < 0
+    text = str(value).strip()
+    if text.startswith("-"):
+        return True
+    return bool(re.search(r"-\s*[\d,]", text))
+
+
+def _parse_settlement_amount(value: Any) -> Decimal:
+    """Signed CASH / online amount for collections.due_amount: '-' in cell → negative; else positive; blank → 0."""
     if _is_blank(value):
         return Decimal("0")
+    if isinstance(value, numbers.Real) and not isinstance(value, bool):
+        decimal_value = _to_decimal(value)
+        return decimal_value if decimal_value is not None else Decimal("0")
+
     text = str(value).strip()
     cleaned = re.sub(r"[^0-9\-,.]", "", text).replace(",", "")
     decimal_value = _to_decimal(cleaned)
     if decimal_value is None:
         return Decimal("0")
-    return abs(decimal_value)
+    magnitude = abs(decimal_value)
+    if _settlement_amount_is_negative(value):
+        return -magnitude
+    return magnitude
+
+
+def _settlement_cash_and_online_amounts(closed_row: dict[str, Any]) -> tuple[Decimal, Decimal]:
+    cash_amount = _parse_settlement_amount(closed_row.get("CASH"))
+    online_amount = Decimal("0")
+    for key in ("UPI", "ONLINE", "Online", "online"):
+        raw = closed_row.get(key)
+        if not _is_blank(raw):
+            online_amount = _parse_settlement_amount(raw)
+            break
+    return cash_amount, online_amount
+
+
+def _settlement_payment_slices(closed_row: dict[str, Any]) -> list[tuple[str, Decimal]]:
+    """Non-zero CASH / UPI from CLOSED_LOANS_DETAILS → collection_trans (amount always positive)."""
+    slices: list[tuple[str, Decimal]] = []
+    cash_amount, online_amount = _settlement_cash_and_online_amounts(closed_row)
+    if cash_amount != 0:
+        slices.append(("CASH", abs(cash_amount)))
+    if online_amount != 0:
+        slices.append(("UPI", abs(online_amount)))
+    return slices
+
+
+def _settlement_trans_transaction_cd(mode: str) -> str:
+    if mode == "UPI":
+        return "DUMMYBC2A"
+    return ""
+
+
+def _build_settlement_trans_record(
+    *,
+    trans_id: int,
+    center_id: int,
+    collection_id: int,
+    mode: str,
+    amount: Decimal,
+    manager_id: int,
+    customer_id: int,
+    app_no: str,
+    collection_created_at: datetime,
+    trans_actual_created_at: datetime,
+) -> dict[str, Any]:
+    return {
+        "trans_id": trans_id,
+        "is_aggr_trans": False,
+        "org_id": 1,
+        "center_id": center_id,
+        "collection_id": collection_id,
+        "is_active": True,
+        "transaction_cd": _settlement_trans_transaction_cd(mode),
+        "trans_type": "CREDIT",
+        "trans_subtype": "RECORD_PAYMENT",
+        "mode": mode,
+        "amount": amount,
+        "recorded_by": manager_id,
+        "scrap_type_id": 0,
+        "recon_status": "ACCEPTED",
+        "recon_by": manager_id,
+        "recon_at": collection_created_at,
+        "recon_comment": app_no,
+        "is_settled": True,
+        "from_user": 0,
+        "from_customer": customer_id,
+        "to_user": manager_id,
+        "created_by": manager_id,
+        "created_at": collection_created_at,
+        "trans_comments": app_no,
+        "parent_trans_id": None,
+        "request_id": None,
+        "deposit_trans_ids": None,
+        "actual_created_at": trans_actual_created_at,
+    }
 
 
 def _excel_safe_value(value: Any) -> Any:
@@ -144,6 +237,28 @@ def _excel_safe_records(records: list[dict[str, Any]]) -> list[dict[str, Any]]:
     return [{key: _excel_safe_value(value) for key, value in row.items()} for row in records]
 
 
+def _nan_like_to_none(value: Any) -> Any:
+    """Excel read often yields NaN for empty cells; PostgreSQL rejects NaN for timestamptz / integer NULLs."""
+    if value is None:
+        return None
+    if isinstance(value, numbers.Real) and not isinstance(value, bool):
+        try:
+            if math.isnan(float(value)):
+                return None
+        except (TypeError, ValueError, OverflowError):
+            pass
+    try:
+        if pd.isna(value):
+            return None
+    except (TypeError, ValueError):
+        pass
+    return value
+
+
+def _sanitize_db_import_row(row: dict[str, Any]) -> dict[str, Any]:
+    return {key: _nan_like_to_none(val) for key, val in row.items()}
+
+
 def _resolve_input_file(paths, input_name: str) -> Path:
     candidate = Path(input_name)
     if candidate.is_absolute():
@@ -158,6 +273,117 @@ def _resolve_input_file(paths, input_name: str) -> Path:
     return resolved
 
 
+def _csv_blank_to_none(value: Any) -> Any:
+    """With keep_default_na=False, empty cells become '' — coerce to None for SQL NULL (e.g. bigint columns)."""
+    if isinstance(value, str) and value.strip() == "":
+        return None
+    return value
+
+
+def _normalize_script4_csv_records(records: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    return [{key: _csv_blank_to_none(val) for key, val in row.items()} for row in records]
+
+
+def _read_tabular_records(path: Path) -> list[dict[str, Any]]:
+    if path.suffix.lower() == ".csv":
+        # keep_default_na=False: otherwise collection_subtype "NA" is parsed as NaN → NULL on insert.
+        raw = to_records(pd.read_csv(path, keep_default_na=False))
+        return _normalize_script4_csv_records(raw)
+    return to_records(read_excel(path, 0))
+
+
+def _script4_import_settlement_rows(
+    cur: Any,
+    logger: Any,
+    *,
+    success: list[dict[str, Any]],
+    collections_sheet: Path,
+    trans_sheet: Path,
+    cp: CheckpointStore,
+    paths: Any,
+) -> None:
+    collection_rows_for_import = _read_tabular_records(collections_sheet)
+    trans_rows_for_import = _read_tabular_records(trans_sheet)
+    loan_ids = [int(row["loan_id"]) for row in success]
+    status_rows: dict[int, str] = {}
+    if loan_ids:
+        cur.execute(
+            """
+            SELECT application_id, close_status
+            FROM loan_applications
+            WHERE application_id = ANY(%s)
+            """,
+            (loan_ids,),
+        )
+        status_rows = {int(row["application_id"]): _clean_key(row["close_status"]) for row in cur.fetchall()}
+
+    non_pending_loan_ids = [loan_id for loan_id in loan_ids if status_rows.get(loan_id, "").upper() != "PENDING"]
+    if non_pending_loan_ids:
+        raise RuntimeError(
+            "loan_applications.close_status must be PENDING before script_4 import; "
+            f"non_pending_loan_ids={sorted(set(non_pending_loan_ids))}"
+        )
+
+    for coll in collection_rows_for_import:
+        cur.execute(
+            """
+            INSERT INTO collections (
+                collection_id, center_id, org_id, loan_id, sale_id, emi_installment_no, is_active,
+                invoice_doc_id, collection_type, collection_subtype, due_amount, fine_amount,
+                follow_up_date, last_call, due_date, status, expire_reason, info, parent_id,
+                collector_id, caller_id, created_by, created_at, loan_term_id, receipt_doc_id,
+                is_last_collection, discount_amount, discount_reason
+            ) VALUES (
+                %(collection_id)s, %(center_id)s, %(org_id)s, %(loan_id)s, %(sale_id)s,
+                %(emi_installment_no)s, %(is_active)s, %(invoice_doc_id)s, %(collection_type)s,
+                %(collection_subtype)s, %(due_amount)s, %(fine_amount)s, %(follow_up_date)s,
+                %(last_call)s, %(due_date)s, %(status)s, %(expire_reason)s, %(info)s::jsonb,
+                %(parent_id)s, %(collector_id)s, %(caller_id)s, %(created_by)s, %(created_at)s,
+                %(loan_term_id)s, %(receipt_doc_id)s, %(is_last_collection)s, %(discount_amount)s,
+                %(discount_reason)s
+            )
+            """,
+            {**_sanitize_db_import_row(coll), "info": None},
+        )
+
+    for trans in trans_rows_for_import:
+        trans_row = {**_sanitize_db_import_row(trans), "actual_created_at": datetime.now(timezone.utc)}
+        cur.execute(
+            """
+            INSERT INTO collection_trans (
+                trans_id, is_aggr_trans, org_id, center_id, collection_id, is_active,
+                transaction_cd, trans_type, trans_subtype, mode, amount, recorded_by,
+                scrap_type_id, recon_status, recon_by, recon_at, recon_comment, is_settled,
+                from_user, from_customer, to_user, created_by, created_at, trans_comments,
+                parent_trans_id, request_id, actual_created_at
+            ) VALUES (
+                %(trans_id)s, %(is_aggr_trans)s, %(org_id)s, %(center_id)s, %(collection_id)s,
+                %(is_active)s, %(transaction_cd)s, %(trans_type)s, %(trans_subtype)s, %(mode)s,
+                %(amount)s, %(recorded_by)s, %(scrap_type_id)s, %(recon_status)s, %(recon_by)s,
+                %(recon_at)s, %(recon_comment)s, %(is_settled)s, %(from_user)s, %(from_customer)s,
+                %(to_user)s, %(created_by)s, %(created_at)s, %(trans_comments)s, %(parent_trans_id)s,
+                %(request_id)s, %(actual_created_at)s
+            )
+            """,
+            trans_row,
+        )
+
+    applied_loan_ids: list[int] = []
+    for row in success:
+        close_status = status_rows.get(int(row["loan_id"]), "")
+        row["trigger_applied"] = close_status.upper() == "PENDING"
+        row["close_status_after_done"] = close_status
+        row["reason"] = "imported_close_status_pending"
+        applied_loan_ids.append(int(row["loan_id"]))
+        cp.mark_completed(str(row["loan_id"]))
+
+    next_script_file = paths.generated_sheets / "script_4" / "script_4_next_script_loan_ids_latest.xlsx"
+    pd.DataFrame([{"loan_id": loan_id} for loan_id in sorted(set(applied_loan_ids))]).to_excel(
+        next_script_file, index=False
+    )
+    logger.info("loan ids for next script: %s", next_script_file)
+
+
 def run() -> int:
     parser = parse_common_args("Script 4 - Settlement collection creation")
     parser.add_argument("--input", default=DEFAULT_INPUT)
@@ -166,7 +392,7 @@ def run() -> int:
     logger = setup_logger(STAGE, paths)
     load_env_file(paths.root.parent / ".env", logger)
     cp = CheckpointStore(STAGE, paths)
-    execute_mode = runtime.execute and not runtime.dry_run
+    explicit_dry_run = bool(args.dry_run)
 
     input_file = _resolve_input_file(paths, args.input)
     tracker_rows = to_records(read_excel(input_file, 0))
@@ -194,13 +420,17 @@ def run() -> int:
     staged_collections: list[dict[str, Any]] = []
     staged_trans: list[dict[str, Any]] = []
     output_dir = paths.generated_sheets / "script_4"
-    collections_sheet = output_dir / "script_4_generated_collections_latest.xlsx"
-    trans_sheet = output_dir / "script_4_generated_collection_trans_latest.xlsx"
+    run_id = ts_label()
+    db_bundle_dir = paths.generated_db_sheets / "script_4" / run_id
+    db_bundle_dir.mkdir(parents=True, exist_ok=True)
+    collections_staging = db_bundle_dir / "settlement_collections.csv"
+    trans_staging = db_bundle_dir / "settlement_collection_trans.csv"
+    collections_sheet = output_dir / "script_4_generated_collections_latest.csv"
+    trans_sheet = output_dir / "script_4_generated_collection_trans_latest.csv"
     applied_sheet = output_dir / "script_4_settlement_apply_status_latest.xlsx"
 
     next_collection_id = COLLECTION_START_ID
     next_trans_id = TRANS_START_ID
-    critical_failure = False
 
     db = DbClient(logger)
     try:
@@ -213,8 +443,7 @@ def run() -> int:
 
                     if not key:
                         failed.append(mandatory_failure_fields(None, app_id, "missing loan_id in script_3 output", STAGE))
-                        critical_failure = True
-                        break
+                        continue
 
                     if key in completed:
                         skipped.append({"loan_id": loan_id, "application_id": app_id, "reason": "already_processed"})
@@ -229,22 +458,16 @@ def run() -> int:
                             closed_row = closed_by_app_no.get(app_no)
                     if not closed_row:
                         failed.append(mandatory_failure_fields(loan_id, app_id, "loan missing in CLOSED_LOANS_DETAILS", STAGE))
-                        critical_failure = True
-                        break
+                        continue
 
                     loan_term_id = _to_int(closed_row.get("LOAN_TERM_ID") or closed_row.get("loan_term_id"))
                     if loan_term_id is None:
                         failed.append(mandatory_failure_fields(loan_id, app_id, "loan_term_id missing in CLOSED_LOANS_DETAILS", STAGE))
-                        critical_failure = True
-                        break
+                        continue
 
-                    settlement_amount = _parse_settlement_amount(
-                        closed_row.get("SETTLEMENT_AMOUNT") or closed_row.get("Settlement Amount")
-                    )
-                    if settlement_amount < 0:
-                        failed.append(mandatory_failure_fields(loan_id, app_id, "negative settlement amount not allowed", STAGE))
-                        critical_failure = True
-                        break
+                    cash_amount, upi_amount = _settlement_cash_and_online_amounts(closed_row)
+                    settlement_amount = cash_amount + upi_amount  # signed sum → collections.due_amount
+                    payment_slices = _settlement_payment_slices(closed_row)  # trans amounts are positive only
 
                     request_type = _resolve_info_request_type(
                         closed_row.get("FINAL_CLOSE_TYPE") or closed_row.get("FINAL CLOSE TYPE")
@@ -254,18 +477,16 @@ def run() -> int:
                             mandatory_failure_fields(
                                 loan_id,
                                 app_id,
-                                "FINAL_CLOSE_TYPE must be RECOVERED/FORECLOSE/RETURN",
+                                "FINAL_CLOSE_TYPE must be RECOVERED/FORECLOSE/RETURN_CREDIT/RETURN_DEBIT",
                                 STAGE,
                             )
                         )
-                        critical_failure = True
-                        break
+                        continue
 
                     customer_id = _to_int(tracker_row.get("customer_id"))
                     if customer_id is None:
                         failed.append(mandatory_failure_fields(loan_id, app_id, "customer_id missing in script_3 output", STAGE))
-                        critical_failure = True
-                        break
+                        continue
 
                     cur.execute(
                         """
@@ -280,13 +501,11 @@ def run() -> int:
                     center_row = cur.fetchone()
                     if not center_row:
                         failed.append(mandatory_failure_fields(loan_id, app_id, "center_id resolution failed", STAGE))
-                        critical_failure = True
-                        break
+                        continue
                     center_id = _to_int(center_row.get("center_id"))
                     if center_id is None:
                         failed.append(mandatory_failure_fields(loan_id, app_id, "invalid center_id resolved", STAGE))
-                        critical_failure = True
-                        break
+                        continue
                     manager_id = center_to_manager.get(center_id)
                     if manager_id is None:
                         failed.append(
@@ -297,18 +516,26 @@ def run() -> int:
                                 STAGE,
                             )
                         )
-                        critical_failure = True
-                        break
+                        continue
 
                     app_no = _clean_key(closed_row.get("Application_No.") or closed_row.get("Application No."))
-                    created_at = _now_ist()
                     closed_date_raw = pd.to_datetime(
                         closed_row.get("CLOSED_DATE") or closed_row.get("CLOSED DATE"),
                         errors="coerce",
                     )
-                    trans_created_at = created_at if pd.isna(closed_date_raw) else closed_date_raw.to_pydatetime()
-                    if trans_created_at.tzinfo is None:
-                        trans_created_at = trans_created_at.replace(tzinfo=timezone.utc)
+                    if pd.isna(closed_date_raw):
+                        failed.append(
+                            mandatory_failure_fields(
+                                loan_id,
+                                app_id,
+                                "CLOSED DATE missing or invalid in CLOSED_LOANS_DETAILS",
+                                STAGE,
+                            )
+                        )
+                        continue
+                    collection_created_at = closed_date_raw.to_pydatetime()
+                    if collection_created_at.tzinfo is None:
+                        collection_created_at = collection_created_at.replace(tzinfo=timezone.utc)
 
                     coll_record = {
                         "collection_id": next_collection_id,
@@ -328,12 +555,12 @@ def run() -> int:
                         "due_date": datetime(5000, 1, 1, 5, 30, 0, tzinfo=timezone(timedelta(hours=5, minutes=30))),
                         "status": "DONE",
                         "expire_reason": app_no,
-                        "info": {"request_id": 0, "request_type": request_type},
+                        "info": None,
                         "parent_id": None,
                         "collector_id": manager_id,
                         "caller_id": None,
                         "created_by": manager_id,
-                        "created_at": created_at,
+                        "created_at": collection_created_at,
                         "loan_term_id": loan_term_id,
                         "receipt_doc_id": None,
                         "is_last_collection": False,
@@ -342,38 +569,21 @@ def run() -> int:
                     }
                     staged_collections.append(coll_record)
 
-                    if settlement_amount > 0:
+                    trans_actual_created_at = datetime.now(timezone.utc)
+                    for mode, slice_amount in payment_slices:
                         staged_trans.append(
-                            {
-                                "trans_id": next_trans_id,
-                                "is_aggr_trans": False,
-                                "org_id": 1,
-                                "center_id": center_id,
-                                "collection_id": next_collection_id,
-                                "is_active": True,
-                                "transaction_cd": "DUMMYBC2A",
-                                "trans_type": "CREDIT",
-                                "trans_subtype": "RECORD_PAYMENT",
-                                "mode": "UPI",
-                                "amount": settlement_amount,
-                                "recorded_by": manager_id,
-                                "scrap_type_id": 0,
-                                "recon_status": "ACCEPTED",
-                                "recon_by": manager_id,
-                                "recon_at": created_at,
-                                "recon_comment": app_no,
-                                "is_settled": True,
-                                "from_user": 0,
-                                "from_customer": customer_id,
-                                "to_user": manager_id,
-                                "created_by": manager_id,
-                                "created_at": trans_created_at,
-                                "trans_comments": app_no,
-                                "parent_trans_id": None,
-                                "request_id": None,
-                                "deposit_trans_ids": None,
-                                "actual_created_at": created_at,
-                            }
+                            _build_settlement_trans_record(
+                                trans_id=next_trans_id,
+                                center_id=center_id,
+                                collection_id=next_collection_id,
+                                mode=mode,
+                                amount=slice_amount,
+                                manager_id=manager_id,
+                                customer_id=customer_id,
+                                app_no=app_no,
+                                collection_created_at=collection_created_at,
+                                trans_actual_created_at=trans_actual_created_at,
+                            )
                         )
                         next_trans_id += 1
 
@@ -382,121 +592,70 @@ def run() -> int:
                             "loan_id": loan_id,
                             "application_id": app_id,
                             "collection_id": next_collection_id,
+                            "settlement_cash": str(cash_amount),
+                            "settlement_upi": str(upi_amount),
                             "settlement_amount": str(settlement_amount),
                             "collection_status_initial": "DONE",
                             "trigger_applied": False,
                             "close_status_after_done": "",
-                            "collection_trans_created": settlement_amount > 0,
+                            "collection_trans_created": len(payment_slices) > 0,
+                            "collection_trans_count": len(payment_slices),
                             "reason": "staged",
                         }
                     )
                     next_collection_id += 1
 
-                if critical_failure:
-                    logger.error("critical mapping failure; stopping script as requested")
-
-                # Always create both import sheets first.
-                pd.DataFrame(_excel_safe_records(staged_collections)).to_excel(collections_sheet, index=False)
-                pd.DataFrame(_excel_safe_records(staged_trans)).to_excel(trans_sheet, index=False)
-                logger.info("generated collections sheet: %s", collections_sheet)
-                logger.info("generated collection_trans sheet: %s", trans_sheet)
-
-                if execute_mode and not critical_failure:
-                    collection_rows_for_import = to_records(read_excel(collections_sheet, 0))
-                    trans_rows_for_import = to_records(read_excel(trans_sheet, 0))
-                    loan_ids = [int(row["loan_id"]) for row in success]
-                    status_rows: dict[int, str] = {}
-                    if loan_ids:
-                        cur.execute(
-                            """
-                            SELECT application_id, close_status
-                            FROM loan_applications
-                            WHERE application_id = ANY(%s)
-                            """,
-                            (loan_ids,),
-                        )
-                        status_rows = {int(row["application_id"]): _clean_key(row["close_status"]) for row in cur.fetchall()}
-
-                    non_pending_loan_ids = [
-                        loan_id for loan_id in loan_ids if status_rows.get(loan_id, "").upper() != "PENDING"
-                    ]
-                    if non_pending_loan_ids:
-                        raise RuntimeError(
-                            "loan_applications.close_status must be PENDING before script_4 import; "
-                            f"non_pending_loan_ids={sorted(set(non_pending_loan_ids))}"
-                        )
-
-                    for coll in collection_rows_for_import:
-                        info_payload = coll.get("info")
-                        if isinstance(info_payload, str):
-                            info_payload = json.loads(info_payload)
-                        if info_payload is None:
-                            info_payload = {}
-                        cur.execute(
-                            """
-                            INSERT INTO collections (
-                                collection_id, center_id, org_id, loan_id, sale_id, emi_installment_no, is_active,
-                                invoice_doc_id, collection_type, collection_subtype, due_amount, fine_amount,
-                                follow_up_date, last_call, due_date, status, expire_reason, info, parent_id,
-                                collector_id, caller_id, created_by, created_at, loan_term_id, receipt_doc_id,
-                                is_last_collection, discount_amount, discount_reason
-                            ) VALUES (
-                                %(collection_id)s, %(center_id)s, %(org_id)s, %(loan_id)s, %(sale_id)s,
-                                %(emi_installment_no)s, %(is_active)s, %(invoice_doc_id)s, %(collection_type)s,
-                                %(collection_subtype)s, %(due_amount)s, %(fine_amount)s, %(follow_up_date)s,
-                                %(last_call)s, %(due_date)s, %(status)s, %(expire_reason)s, %(info)s::jsonb,
-                                %(parent_id)s, %(collector_id)s, %(caller_id)s, %(created_by)s, %(created_at)s,
-                                %(loan_term_id)s, %(receipt_doc_id)s, %(is_last_collection)s, %(discount_amount)s,
-                                %(discount_reason)s
-                            )
-                            """,
-                            {**coll, "info": json.dumps(info_payload)},
-                        )
-
-                    for trans in trans_rows_for_import:
-                        cur.execute(
-                            """
-                            INSERT INTO collection_trans (
-                                trans_id, is_aggr_trans, org_id, center_id, collection_id, is_active,
-                                transaction_cd, trans_type, trans_subtype, mode, amount, recorded_by,
-                                scrap_type_id, recon_status, recon_by, recon_at, recon_comment, is_settled,
-                                from_user, from_customer, to_user, created_by, created_at, trans_comments,
-                                parent_trans_id, request_id
-                            ) VALUES (
-                                %(trans_id)s, %(is_aggr_trans)s, %(org_id)s, %(center_id)s, %(collection_id)s,
-                                %(is_active)s, %(transaction_cd)s, %(trans_type)s, %(trans_subtype)s, %(mode)s,
-                                %(amount)s, %(recorded_by)s, %(scrap_type_id)s, %(recon_status)s, %(recon_by)s,
-                                %(recon_at)s, %(recon_comment)s, %(is_settled)s, %(from_user)s, %(from_customer)s,
-                                %(to_user)s, %(created_by)s, %(created_at)s, %(trans_comments)s, %(parent_trans_id)s,
-                                %(request_id)s
-                            )
-                            """,
-                            trans,
-                        )
-
-                    applied_loan_ids: list[int] = []
-                    for row in success:
-                        close_status = status_rows.get(int(row["loan_id"]), "")
-                        row["trigger_applied"] = close_status.upper() == "PENDING"
-                        row["close_status_after_done"] = close_status
-                        row["reason"] = "imported_close_status_pending"
-                        applied_loan_ids.append(int(row["loan_id"]))
-                        cp.mark_completed(str(row["loan_id"]))
-
-                    next_script_file = paths.generated_sheets / "script_4" / "script_4_next_script_loan_ids_latest.xlsx"
-                    pd.DataFrame([{"loan_id": loan_id} for loan_id in sorted(set(applied_loan_ids))]).to_excel(
-                        next_script_file, index=False
-                    )
-                    logger.info("loan ids for next script: %s", next_script_file)
-                else:
-                    for row in success:
-                        row["reason"] = "dry_run_only_staged"
     except Exception as exc:  # noqa: BLE001
         logger.exception("script_4 failed: %s", exc)
         if not failed:
             failed.append(mandatory_failure_fields(None, None, str(exc), STAGE))
     finally:
         db.close()
+
+    if staged_collections:
+        pd.DataFrame(_excel_safe_records(staged_collections)).to_csv(collections_staging, index=False)
+        pd.DataFrame(_excel_safe_records(staged_trans)).to_csv(trans_staging, index=False)
+        shutil.copy2(collections_staging, collections_sheet)
+        shutil.copy2(trans_staging, trans_sheet)
+        logger.info("script_4 DB staging bundle: %s", db_bundle_dir)
+        logger.info("settlement collections (staging): %s", collections_staging)
+        logger.info("settlement collection_trans (staging): %s", trans_staging)
+        logger.info("copied latest sheets to: %s and %s", collections_sheet, trans_sheet)
+
+    import_performed = False
+    if (
+        not explicit_dry_run
+        and staged_collections
+        and prompt_db_import(
+            logger,
+            stage_label="script_4_settlement",
+            files=[
+                ("settlement_collections", collections_staging),
+                ("settlement_collection_trans", trans_staging),
+            ],
+        )
+    ):
+        db_import = DbClient(logger)
+        try:
+            with db_import.conn() as conn:
+                with conn.cursor(cursor_factory=RealDictCursor) as cur:
+                    _script4_import_settlement_rows(
+                        cur,
+                        logger,
+                        success=success,
+                        collections_sheet=collections_sheet,
+                        trans_sheet=trans_sheet,
+                        cp=cp,
+                        paths=paths,
+                    )
+            import_performed = True
+        finally:
+            db_import.close()
+
+    if not import_performed:
+        for row in success:
+            if row.get("reason") == "staged":
+                row["reason"] = "staged_not_imported"
 
     pd.DataFrame(_excel_safe_records(success)).to_excel(applied_sheet, index=False)
     logger.info("settlement apply status sheet: %s", applied_sheet)

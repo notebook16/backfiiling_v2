@@ -15,6 +15,10 @@ SCRIPTS = [
     ("script_5_collection_status_update.py", "Script 5 Finalization"),
 ]
 
+POST_VALIDATION_SCRIPTS = [
+    ("script_VAL1_post_emi_total_validation.py", "Script VAL1 EMI Total Validation"),
+]
+
 
 def run_script(script_dir: Path, script_name: str, passthrough: list[str]) -> int:
     cmd = [sys.executable, str(script_dir / script_name), *passthrough]
@@ -23,7 +27,7 @@ def run_script(script_dir: Path, script_name: str, passthrough: list[str]) -> in
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Master runner for CLOSED_LOANS_DETAILS backfill")
-    parser.add_argument("--mode", choices=["full", "single", "resume"], default="full")
+    parser.add_argument("--mode", choices=["full", "single", "resume", "post-validation"], default="full")
     parser.add_argument("--script", default="script_1_validation.py")
     parser.add_argument("--execute", action="store_true")
     parser.add_argument("--dry-run", action="store_true")
@@ -45,7 +49,9 @@ def main() -> int:
     if args.mode == "single":
         return run_script(script_dir, args.script, passthrough)
 
-    for script_name, label in SCRIPTS:
+    script_plan = POST_VALIDATION_SCRIPTS if args.mode == "post-validation" else SCRIPTS
+
+    for script_name, label in script_plan:
         code = run_script(script_dir, script_name, passthrough)
         print(f"\n{label} summary")
         if code == 0:

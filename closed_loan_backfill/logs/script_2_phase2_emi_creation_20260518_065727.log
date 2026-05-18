@@ -1,0 +1,27 @@
+2026-05-18 12:27:27,795 | INFO | closed_loan_backfill.script_2_phase2_emi_creation | loaded 5 env vars from /home/prince/Desktop/BACKFILL/.env
+2026-05-18 12:27:27,903 | INFO | closed_loan_backfill.script_2_phase2_emi_creation | processing input row: raw_loan_id=3706 raw_application_id=3706 raw_dp_collection_id=50289 raw_phase=PHASE_3
+2026-05-18 12:27:27,903 | INFO | closed_loan_backfill.script_2_phase2_emi_creation | processing input row: raw_loan_id=2644 raw_application_id=2644 raw_dp_collection_id=1032 raw_phase=PHASE_3
+2026-05-18 12:27:27,903 | INFO | closed_loan_backfill.script_2_phase2_emi_creation | processing input row: raw_loan_id=101 raw_application_id=101 raw_dp_collection_id=1098 raw_phase=PHASE_3
+2026-05-18 12:27:27,903 | INFO | closed_loan_backfill.script_2_phase2_emi_creation | processing input row: raw_loan_id=203 raw_application_id=203 raw_dp_collection_id=1105 raw_phase=PHASE_3
+2026-05-18 12:27:27,904 | INFO | closed_loan_backfill.script_2_phase2_emi_creation | processing input row: raw_loan_id=2680 raw_application_id=2680 raw_dp_collection_id=1151 raw_phase=PHASE_3
+2026-05-18 12:27:27,904 | INFO | closed_loan_backfill.script_2_phase2_emi_creation | processing input row: raw_loan_id=318 raw_application_id=318 raw_dp_collection_id=1176 raw_phase=PHASE_3
+2026-05-18 12:27:27,904 | INFO | closed_loan_backfill.script_2_phase2_emi_creation | processing input row: raw_loan_id=417 raw_application_id=417 raw_dp_collection_id=1178 raw_phase=PHASE_3
+2026-05-18 12:27:27,904 | INFO | closed_loan_backfill.script_2_phase2_emi_creation | processing input row: raw_loan_id=1432 raw_application_id=1432 raw_dp_collection_id=1453 raw_phase=PHASE_3
+2026-05-18 12:27:27,904 | INFO | closed_loan_backfill.script_2_phase2_emi_creation | processing input row: raw_loan_id=1602 raw_application_id=1602 raw_dp_collection_id=1494 raw_phase=PHASE_3
+2026-05-18 12:27:27,904 | INFO | closed_loan_backfill.script_2_phase2_emi_creation | processing input row: raw_loan_id=2003 raw_application_id=2003 raw_dp_collection_id=1613 raw_phase=PHASE_3
+2026-05-18 12:27:27,904 | INFO | closed_loan_backfill.script_2_phase2_emi_creation | processing input row: raw_loan_id=2231 raw_application_id=2231 raw_dp_collection_id=1680 raw_phase=PHASE_3
+2026-05-18 12:27:27,904 | INFO | closed_loan_backfill.script_2_phase2_emi_creation | processing input row: raw_loan_id=2832 raw_application_id=2832 raw_dp_collection_id=1742 raw_phase=PHASE_3
+2026-05-18 12:27:27,904 | INFO | closed_loan_backfill.script_2_phase2_emi_creation | processing input row: raw_loan_id=2523 raw_application_id=2523 raw_dp_collection_id=2078 raw_phase=PHASE_3
+2026-05-18 12:27:27,904 | INFO | closed_loan_backfill.script_2_phase2_emi_creation | processing input row: raw_loan_id=1223 raw_application_id=1223 raw_dp_collection_id=2316 raw_phase=PHASE_3
+2026-05-18 12:27:27,904 | INFO | closed_loan_backfill.script_2_phase2_emi_creation | processing input row: raw_loan_id=1028 raw_application_id=1028 raw_dp_collection_id=505 raw_phase=PHASE_3
+2026-05-18 12:27:27,904 | INFO | closed_loan_backfill.script_2_phase2_emi_creation | processing input row: raw_loan_id=1218 raw_application_id=1218 raw_dp_collection_id=543 raw_phase=PHASE_3
+2026-05-18 12:27:27,904 | INFO | closed_loan_backfill.script_2_phase2_emi_creation | processing input row: raw_loan_id=1484 raw_application_id=1484 raw_dp_collection_id=630 raw_phase=PHASE_3
+2026-05-18 12:27:27,904 | INFO | closed_loan_backfill.script_2_phase2_emi_creation | processing input row: raw_loan_id=2514 raw_application_id=2514 raw_dp_collection_id=642 raw_phase=PHASE_3
+2026-05-18 12:27:27,963 | INFO | closed_loan_backfill.script_2_phase2_emi_creation | === script_2_phase2_emi_creation summary ===
+2026-05-18 12:27:27,963 | INFO | closed_loan_backfill.script_2_phase2_emi_creation | loaded records: 18
+2026-05-18 12:27:27,963 | INFO | closed_loan_backfill.script_2_phase2_emi_creation | updated count: 0
+2026-05-18 12:27:27,963 | INFO | closed_loan_backfill.script_2_phase2_emi_creation | skipped count: 18
+2026-05-18 12:27:27,963 | INFO | closed_loan_backfill.script_2_phase2_emi_creation | skipped by reason: {'non_phase_2': 18}
+2026-05-18 12:27:27,963 | INFO | closed_loan_backfill.script_2_phase2_emi_creation | failed count: 0
+2026-05-18 12:27:27,963 | INFO | closed_loan_backfill.script_2_phase2_emi_creation | multi_collection_conflict count: 0
+2026-05-18 12:27:27,963 | INFO | closed_loan_backfill.script_2_phase2_emi_creation | audit files: {'updated': PosixPath('/home/prince/Desktop/BACKFILL/closed_loan_backfill/generated_sheets/script_2/script_2_phase2_updated_20260518_065727.xlsx'), 'skipped': PosixPath('/home/prince/Desktop/BACKFILL/closed_loan_backfill/generated_sheets/script_2/script_2_phase2_skipped_20260518_065727.xlsx'), 'failed': PosixPath('/home/prince/Desktop/BACKFILL/closed_loan_backfill/generated_sheets/script_2/script_2_phase2_failed_20260518_065727.xlsx'), 'multi_collection_conflict': PosixPath('/home/prince/Desktop/BACKFILL/closed_loan_backfill/generated_sheets/script_2/script_2_phase2_multi_collection_conflict_20260518_065727.xlsx')}

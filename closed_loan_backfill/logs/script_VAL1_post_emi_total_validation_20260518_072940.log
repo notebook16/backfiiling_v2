@@ -1,0 +1,11 @@
+2026-05-18 12:59:40,651 | INFO | closed_loan_backfill.script_VAL1_post_emi_total_validation | loaded 5 env vars from /home/prince/Desktop/BACKFILL/.env
+2026-05-18 12:59:40,680 | INFO | closed_loan_backfill.script_VAL1_post_emi_total_validation | loaded 49 pipeline-success rows from /home/prince/Desktop/BACKFILL/closed_loan_backfill/generated_sheets/script_5/script_5_final_status_success_20260518_070427.xlsx
+2026-05-18 12:59:42,475 | INFO | closed_loan_backfill.script_VAL1_post_emi_total_validation | === script_VAL1_post_emi_total_validation summary ===
+2026-05-18 12:59:42,475 | INFO | closed_loan_backfill.script_VAL1_post_emi_total_validation | loaded records: 49
+2026-05-18 12:59:42,475 | INFO | closed_loan_backfill.script_VAL1_post_emi_total_validation | matched count: 44
+2026-05-18 12:59:42,475 | INFO | closed_loan_backfill.script_VAL1_post_emi_total_validation | mismatch count: 5
+2026-05-18 12:59:42,475 | INFO | closed_loan_backfill.script_VAL1_post_emi_total_validation | mismatch by reason: {'db_emi_total != tracker EMIs Total': 5}
+2026-05-18 12:59:42,475 | INFO | closed_loan_backfill.script_VAL1_post_emi_total_validation | mapping_failed count: 0
+2026-05-18 12:59:42,475 | INFO | closed_loan_backfill.script_VAL1_post_emi_total_validation | mismatch report (mismatches + mapping failures): /home/prince/Desktop/BACKFILL/closed_loan_backfill/generated_sheets/script_VAL1/script_VAL1_emi_total_mismatch_20260518_072942.xlsx
+2026-05-18 12:59:42,475 | INFO | closed_loan_backfill.script_VAL1_post_emi_total_validation | latest mismatch report: /home/prince/Desktop/BACKFILL/closed_loan_backfill/generated_sheets/script_VAL1/script_VAL1_emi_total_mismatch_latest.xlsx
+2026-05-18 12:59:42,475 | INFO | closed_loan_backfill.script_VAL1_post_emi_total_validation | audit files: {'matched': PosixPath('/home/prince/Desktop/BACKFILL/closed_loan_backfill/generated_sheets/script_VAL1/script_VAL1_emi_total_validation_matched_20260518_072942.xlsx'), 'mismatch': PosixPath('/home/prince/Desktop/BACKFILL/closed_loan_backfill/generated_sheets/script_VAL1/script_VAL1_emi_total_validation_mismatch_20260518_072942.xlsx'), 'mapping_failed': PosixPath('/home/prince/Desktop/BACKFILL/closed_loan_backfill/generated_sheets/script_VAL1/script_VAL1_emi_total_validation_mapping_failed_20260518_072942.xlsx')}

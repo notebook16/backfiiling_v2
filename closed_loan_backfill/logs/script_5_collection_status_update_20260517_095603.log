@@ -1,0 +1,10 @@
+2026-05-17 15:26:03,739 | INFO | closed_loan_backfill.script_5_collection_status_update | loaded 5 env vars from /home/prince/Desktop/BACKFILL/.env
+2026-05-17 15:26:03,755 | INFO | closed_loan_backfill.script_5_collection_status_update | loaded 14 rows from /home/prince/Desktop/BACKFILL/closed_loan_backfill/generated_sheets/script_4/script_4_settlement_apply_status_latest.xlsx
+2026-05-17 15:26:03,889 | INFO | closed_loan_backfill.script_5_collection_status_update | script_5 merged script_4 output with closed-loan sheet: script_4_rows=14 merged_ok=14 merge_failed=0
+2026-05-17 15:26:06,786 | INFO | closed_loan_backfill.script_5_collection_status_update | === script_5_collection_status_update summary ===
+2026-05-17 15:26:06,786 | INFO | closed_loan_backfill.script_5_collection_status_update | loaded records: 14
+2026-05-17 15:26:06,786 | INFO | closed_loan_backfill.script_5_collection_status_update | success count: 6
+2026-05-17 15:26:06,786 | INFO | closed_loan_backfill.script_5_collection_status_update | failed count: 8
+2026-05-17 15:26:06,786 | INFO | closed_loan_backfill.script_5_collection_status_update | failed by reason: {'settlement amount present but settlement collection (installment=-1) missing': 8}
+2026-05-17 15:26:06,786 | INFO | closed_loan_backfill.script_5_collection_status_update | skipped count: 0
+2026-05-17 15:26:06,787 | INFO | closed_loan_backfill.script_5_collection_status_update | audit files: {'success': PosixPath('/home/prince/Desktop/BACKFILL/closed_loan_backfill/generated_sheets/script_5/script_5_final_status_success_20260517_095606.xlsx'), 'failed': PosixPath('/home/prince/Desktop/BACKFILL/closed_loan_backfill/generated_sheets/script_5/script_5_final_status_failed_20260517_095606.xlsx'), 'skipped': PosixPath('/home/prince/Desktop/BACKFILL/closed_loan_backfill/generated_sheets/script_5/script_5_final_status_skipped_20260517_095606.xlsx')}
